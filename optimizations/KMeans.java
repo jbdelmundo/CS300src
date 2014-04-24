@@ -21,7 +21,9 @@ public class KMeans {
 	
 	
 	
-	
+	/**
+	 * Returns a list of Centroids 
+	 */
 	public DataPacket[] runKMeansClusteringPhase(DataSet D,int samplesize, int k,int itr){
 		
 		//insert samples into array samples
@@ -157,7 +159,7 @@ public class KMeans {
 		for (int i = 0; i < D.size(); i++) {
 			DataPacket p = D.elementAt(i);
 			
-			//find nearest centroids of point p
+			//find top nearest centroids of point p
 			PriorityQueue<CentroidIndex> nearestCentroids = new PriorityQueue<CentroidIndex>(probecount+1);			
 			for (int j = 0; j < Centroids.length; j++) {
 				double cdist = kmeansIndexdist(p, Centroids[j]);				
@@ -194,16 +196,16 @@ public class KMeans {
 	
 	
 	/**
-	 * Improvement: Multiple Indices
+	 * Improvement: Multiple Indices(k means run),
 	 */
-	public void querry(DataSet D, int k, DataPacket source, DataSet[] indices){
+	public void querry(DataPacket source, DataSet[] index, DataPacket[] Centroids, int probecount){
 		
-		//initialize heap
+		//initialize heap to track neighbors
 		
-		//find the closest centroid index
+		//find the closest centroids index i
 		
-		//for all points in I[]
-			//add if closer than farthest point
+		
+		//for each centroid index, perform a linear search
 	}
 	
 
