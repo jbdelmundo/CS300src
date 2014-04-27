@@ -9,7 +9,11 @@ public class DataSet extends Vector<DataPacket> {
 	private static final long serialVersionUID = 1L;
 	
 	public DataSet() {
-
+		
+	}
+	
+	public DataSet(int initialCapacity){
+		super(initialCapacity);
 	}
 	
 	public DataSet(Collection<DataPacket> arg0){
