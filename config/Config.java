@@ -76,7 +76,7 @@ public class Config {
 	}
 	
 	public static double getIntegerRangeNormalizationValue(){
-		return 46340.0;
+		return Math.sqrt(Integer.MAX_VALUE);
 	}
 	
 	

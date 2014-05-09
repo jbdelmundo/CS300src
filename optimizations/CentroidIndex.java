@@ -11,8 +11,8 @@ public class CentroidIndex implements Comparable<CentroidIndex>{
 			this.dist = dist;
 		}
 		public int compareTo(CentroidIndex o) {
-			if(dist > o.dist) return 1;
-			if(dist < o.dist) return -1;
+			if(dist > o.dist) return -1;
+			if(dist < o.dist) return 1;
 			return 0;
 		}
 	

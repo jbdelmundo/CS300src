@@ -7,6 +7,7 @@ public class SteepArea extends HeapObject{
 	public double mib;
 	public boolean negativeStart = false;
 	public boolean isSteepUp;
+	public boolean isFlat = false;
 	
 	@Override
 	

@@ -19,7 +19,9 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RefineryUtilities;
 
+import data.DataPacket;
 import data.ReachabilityPoint;
+import data.SteepArea;
 import fileIO.OpticsOrderingReader;
 
 
@@ -30,20 +32,24 @@ public class OpticsPlot extends JFrame{
 	XYSeries normal;
 	XYSeries attack;
 	
+	public static final int BY_ATTACK_VS_NORMAL = 1;
+	public static final int BY_ATTACK_CATEGORY = 2;
+	public static final int BY_TRAIN_VS_TEST = 3;
 	
-	//1393380799912
 	
 	public OpticsPlot(String title) {
 		super(title);
 		dataset = new XYSeriesCollection();
 		
-		
+		String chartTitle = title;
+		String xAxisLabel = "Point number";
+		String yAxisLabel = "Reachability";
 
 		JFreeChart chart = ChartFactory.createXYBarChart(
-				"XYBAR",	//title
-				"Xaxis Label",			//domain label
+				chartTitle,	//title
+				xAxisLabel,			//domain label
 				false,					//display date?
-				"Yaxis Label",			//range label
+				yAxisLabel,			//range label
 				dataset, 				//data
 				PlotOrientation.VERTICAL, // orientation
 				true, // include legend
@@ -67,12 +73,72 @@ public class OpticsPlot extends JFrame{
 		
 	}
 	
-	public void addData(String pathname){
-		ArrayList<ReachabilityPoint> points = OpticsOrderingReader.readFile(pathname);
-		addData(points);
+	public void addData(ArrayList<ReachabilityPoint> points, int mode){
+		switch (mode) {
+		case BY_ATTACK_CATEGORY:
+			addDataByCategory(points);
+			break;
+			
+		case BY_ATTACK_VS_NORMAL:
+			addDataByNormalAttack(points);
+			break;
+
+		case BY_TRAIN_VS_TEST:
+			addDataByTrainTest(points);
+			break;
+			
+		default:
+			break;
+		}
 	}
 	
-	public void addData(ArrayList<ReachabilityPoint> points){
+	
+	
+	public void addDataBySteepAreas(ArrayList<ReachabilityPoint> points,ArrayList<SteepArea> areas){
+		
+		XYSeries steepUp = new XYSeries("SteepUp");
+		XYSeries steepDown = new XYSeries("SteepDown");
+		XYSeries flat = new XYSeries("Flat");
+		
+		steepDown.setNotify(false);
+		steepUp.setNotify(false);
+		flat.setNotify(false);
+		
+		
+		int counter = 0, start = -1, end = -1;
+		int areacount = 0;
+		boolean isSteepUp = false, isFlat = false;
+		for (int i = 0; i < points.size(); i++) {
+			
+			
+			ReachabilityPoint point = points.get(i);
+			
+			if(counter > end){
+				start = areas.get(areacount).startIndex;
+				end = areas.get(areacount).endIndex;
+				isSteepUp = areas.get(areacount).isSteepUp;
+				isFlat = areas.get(areacount).isFlat;
+			}
+			
+			
+			
+			double reachability = point.reachability ;
+			if(isFlat){
+				flat.add(counter, reachability);
+			}else if(isSteepUp && !isFlat){
+				steepUp.add(counter, reachability);
+			}else if(!isSteepUp && !isFlat){
+				steepDown.add(counter, reachability);
+			}
+			
+			counter++;
+		}
+		dataset.addSeries(flat);
+		dataset.addSeries(steepDown);
+		dataset.addSeries(steepUp);
+	}
+	
+	public void addDataByNormalAttack(ArrayList<ReachabilityPoint> points){
 		
 		normal = new XYSeries("Normal");
 		attack = new XYSeries("Attack");
@@ -97,16 +163,96 @@ public class OpticsPlot extends JFrame{
 		dataset.addSeries(attack);
 		dataset.addSeries(normal);
 	}
-
-	 public static void main(String[] args) {
-		 OpticsPlot demo = new OpticsPlot("Bar Demo 1");
-		 demo.pack();
-		 RefineryUtilities.centerFrameOnScreen(demo);
-		 demo.setVisible(true);
-		 demo.setDefaultCloseOperation(EXIT_ON_CLOSE);
-		 
-		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_32-67.optics";
-		 demo.addData(path);
+	
+	public void addDataByTrainTest(ArrayList<ReachabilityPoint> points){
+		
+		XYSeries data[] = new XYSeries[2];
+		data[0] = new XYSeries("Train");
+		data[1] = new XYSeries("Test");
+		
+		for (int i = 0; i < data.length; i++) {
+			data[i].setNotify(false);
+		}
+		
+		for (int i = 0; i < points.size(); i++) {
+			ReachabilityPoint point = points.get(i);
 			
+			if(point.hasLabel){
+				data[0].add(i,point.reachability);	
+			}else{
+				data[1].add(i,point.reachability);	
+			}			
+		}
+		
+		for (int i = 0; i < data.length; i++) {
+			dataset.addSeries(data[i]);
+		}
+		
+	}
+	
+	public void addDataByCategory(ArrayList<ReachabilityPoint> points){
+		
+		XYSeries data[] = new  XYSeries[5];
+		data[0] = new XYSeries("Normal");
+		data[1] = new XYSeries("DOS");
+		data[2] = new XYSeries("U2R");
+		data[3] = new XYSeries("R2L");
+		data[4] = new XYSeries("PROBE");
+		
+		for (int i = 0; i < data.length; i++) {
+			data[i].setNotify(false);
+		}
+		
+		for (int i = 0; i < points.size(); i++) {
+			ReachabilityPoint point = points.get(i);
+			
+			int label = point.label;
+			int labelCategory = DataPacket.getLabelCategory(label);			
+			
+			data[labelCategory].add(i,point.reachability);		
+						
+		}
+		
+		for (int i = 0; i < data.length; i++) {
+			dataset.addSeries(data[i]);
+		}
+	}
+
+	
+	public static void plotGraph(String title, ArrayList<ReachabilityPoint> points, int mode){
+		OpticsPlot demo = new OpticsPlot(title);
+		demo.pack();
+		RefineryUtilities.centerFrameOnScreen(demo);
+		demo.setVisible(true);
+		demo.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		
+		demo.addData(points, mode);
+	}
+	
+	public static void plotGraph(String title, String path, int mode){
+		ArrayList<ReachabilityPoint> points  = OpticsOrderingReader.readFile(path);		
+		plotGraph(title, points, mode);
+	}
+	
+	public static void plotGraph(String title, ArrayList<ReachabilityPoint> points, int mode, ArrayList<SteepArea> areas ){
+		OpticsPlot demo = new OpticsPlot(title);
+		demo.pack();
+		RefineryUtilities.centerFrameOnScreen(demo);
+		demo.setVisible(true);
+		demo.setDefaultCloseOperation(EXIT_ON_CLOSE);		
+		
+		demo.addDataBySteepAreas(points, areas);
+	}
+	
+	public static void plotGraph(String title, String path, int mode, ArrayList<SteepArea> areas){
+		ArrayList<ReachabilityPoint> points  = OpticsOrderingReader.readFile(path);		
+		plotGraph(title, points, mode,areas);
+	}
+	
+	public static void main(String[] args) {
+//		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_34-125.optics";
+//		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_32-67.optics";
+		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_0-1.optics";
+		 plotGraph("OpticsPlot",path, OpticsPlot.BY_ATTACK_CATEGORY);			
 	}
 }

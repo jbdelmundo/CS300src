@@ -48,6 +48,80 @@ public class DataPacket extends OPTICSPoint implements ClusterPoint {
 //		}
 //		System.out.println("");
 //	}
+	
+	public static int getLabelCategory(int label){
+		//based on Relative Entropy based Clustering
+		switch (label) {
+		case NORMAL:
+			return NORMAL;
+			
+		case BACK:
+		case LAND:
+		case NEPTUNE:
+		case POD:
+		case SMURF:
+		case TEARDROP:
+			return DOS;
+			
+		case BUFFER_OVERFLOW:
+		case LOADMODULE:
+		case PERL:
+		case ROOTKIT:
+			return U2R;
+			
+		case FTP_WRITE:
+		case GUESS_PASSWD:
+		case IMAP:
+		case MULTIHOP:
+		case PHF:
+		case SPY:
+		case WAREZCLIENT:
+		case WAREZMASTER:
+			return R2L;
+			
+		case IPSWEEP:
+		case NMAP:
+		case PORTSWEEP:
+		case SATAN:
+			return PROBE;
+				
+
+		default:
+			System.err.println("Returning -1 category:"+label);
+			return -1;
+		}
+	}
+	
+
+	public static final int DOS = 1;
+	public static final int U2R = 2;
+	public static final int R2L = 3;
+	public static final int PROBE = 4;
+	
+	
+	public static final int NORMAL = 0;
+	public static final int BACK = 1;
+	public static final int BUFFER_OVERFLOW = 2;
+	public static final int FTP_WRITE = 3;
+	public static final int GUESS_PASSWD = 4;
+	public static final int IMAP = 5;
+	public static final int IPSWEEP = 6;
+	public static final int LAND = 7;
+	public static final int LOADMODULE = 8;
+	public static final int MULTIHOP = 9;
+	public static final int NEPTUNE = 10;
+	public static final int NMAP = 11;
+	public static final int PERL = 12;
+	public static final int PHF = 13;
+	public static final int POD = 14;
+	public static final int PORTSWEEP = 15;
+	public static final int ROOTKIT = 16;
+	public static final int SATAN = 17;
+	public static final int SMURF = 18;
+	public static final int SPY = 19;
+	public static final int TEARDROP = 20;
+	public static final int WAREZCLIENT = 21;
+	public static final int WAREZMASTER = 22;
 
 	public final static String[] SYMBOLIC_ATTRIBUTES_NAMES = { "protocol_type",
 			"service", "flag", "land", "logged_in", "is_host_login",

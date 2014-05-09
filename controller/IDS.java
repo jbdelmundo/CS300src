@@ -94,7 +94,7 @@ public class IDS {
 //		ids.IDS_run(false);
 		
 		
-		ids.IDS_run(true,32,67);
+		ids.IDS_run(true,34,125);
 		
 //		for (int i = 1; i < 10; i++) {
 //			ids.IDS_run(true,i,i+1);

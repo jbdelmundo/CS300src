@@ -47,6 +47,11 @@ public class KMeans {
 			
 		}
 		
+//		DataPacket samples[] = new DataPacket[D.size()];
+//		for (int i = 0; i < samples.length; i++) {
+//			samples[i] = D.elementAt(i);
+//		}
+		
 		
 		//initialize array C with kPoints Randomly Picked from samples;
 		DataPacket centroids[] = initializeCentroids(samples,k,r);
@@ -81,15 +86,35 @@ public class KMeans {
 			//for all centroids
 			for (int j = 0; j < centroids.length; j++) {
 				
+				
+				
 				//no points assigned to centroid
-				if(N[j] == 0){					
+				while(N[j] == 0){					
 					centroids[j] = new DataPacket(samples[r.nextInt(samples.length)]);	//random centroid
-				}else{
-					centroids[j] = updateCentroid(centroids[j], N[j]);
-					N[j] = 0;
+					
+					int centroidIndex = -1;
+					double centroidDistance = Double.MAX_VALUE;
+					//find the nearest centroid
+					for (int j2 = 0; j2 < k; j2++) {
+						double cdist = kmeansdist(centroids[j2], samples[j]);
+						if(cdist < centroidDistance){
+							centroidIndex = j2;
+							centroidDistance = cdist;
+						}
+					}
+					
+					//assign to the nearest centroid
+					centroids[centroidIndex] = addToCentroid(centroids[centroidIndex],samples[j]);
+					N[centroidIndex]++;
+					
+					
 				}
+				System.out.println("Centroid " + j + " Count: " +N[j]);
 				
-				
+				centroids[j] = updateCentroid(centroids[j], N[j]);					
+				N[j] = 0;
+//				centroids[j].printDataPacketInfo();
+																
 			}
 		}//end of iterations
 		
@@ -121,7 +146,7 @@ public class KMeans {
 	
 	
 	public static double kmeansdist(DataPacket dp1, DataPacket dp2){
-		/*** Get only the distance of continuous attributes, symbolic attributes are considered equal */
+		/*** Get only the distance of continuous attributes, symbolic attributes are considered unequal */
 		
 		double cont_dist = 0.0;
 		for (int i = 0; i < dp1.ContinuousAttr.length; i++) {
@@ -129,6 +154,10 @@ public class KMeans {
 			double diff = dp1.ContinuousAttr[i] - dp2.ContinuousAttr[i];
 			double attr_diff = Math.pow(diff, 2);
 			cont_dist += attr_diff;
+		}
+		
+		for (int i = 0; i < dp1.SymbolicAttr.length; i++) {
+			cont_dist += Math.pow(NearestNeighborCompute.PREFERRED_RANGE, 2);
 		}
 
 		return cont_dist;
@@ -156,7 +185,8 @@ public class KMeans {
 	 * Improvement: Multiple binning
 	 * @return array of datasets. each dataset contains the set of points assigned to the ith centroid
 	 */
-	public static DataSet[] index(DataSet D, DataPacket[] Centroids, int probecount){
+	public static DataSet[] index(DataSet D, DataPacket[] Centroids){
+		System.out.println("Indexing...");
 		//initialize Index
 		DataSet index[] = new DataSet[Centroids.length];
 		for (int i = 0; i < index.length; i++) {
@@ -168,27 +198,24 @@ public class KMeans {
 		for (int i = 0; i < D.size(); i++) {
 			DataPacket p = D.elementAt(i);
 			
-			//find top nearest centroids of point p
-			PriorityQueue<CentroidIndex> nearestCentroids = new PriorityQueue<CentroidIndex>(probecount+1);			
-			for (int j = 0; j < Centroids.length; j++) {
-				double cdist = kmeansIndexdist(p, Centroids[j]);				
-				
-				nearestCentroids.add(new CentroidIndex(j, cdist));
-				if(nearestCentroids.size() > probecount){
-					nearestCentroids.remove();
+			
+			int centroidIndex = -1;
+			double centroidDistance = Double.MAX_VALUE;
+			//find the nearest centroid
+			for (int j2 = 0; j2 < Centroids.length; j2++) {
+				double cdist = kmeansIndexdist(Centroids[j2], p);
+				if(cdist < centroidDistance){
+					centroidIndex = j2;
+					centroidDistance = cdist;
 				}
 			}
 			
-			//add point p to the index[j] where j is the nearest centroids.
-			while(!nearestCentroids.isEmpty()){
-				CentroidIndex ci = nearestCentroids.remove();
-				index[ci.centroidID].add(p);
-			}
+			index[centroidIndex].add(p);
 			
 		}
 		
 		for (int i = 0; i < index.length; i++) {
-			System.out.println("Cenroid "+i+ " member count: " + index[i].size());
+			System.out.println("Centroid "+i+ " member count: " + index[i].size());
 		}
 		
 		System.out.println("IndexSize:" + index.length);
@@ -205,43 +232,34 @@ public class KMeans {
 	 * 		DataPacket[k] Centroids
 	 * 		DataSet[k] index
 	 */
-	public static DataSet query(DataPacket source, DataSet data, double epsilon, KMeansLSHResult[] kmeansResults){
-		
-		
-		
-		//find the closest centroids index i
-		int[] nearestCentroids = new int[kmeansResults.length];
-		
-		for (int i = 0; i < nearestCentroids.length; i++) {
-			
-			int cindex = -1;
-			double dist = Double.MAX_VALUE;
-			for (int j = 0; j < kmeansResults[i].centroids.length; j++) {
-				
-				double distToCentroid =  kmeansIndexdist(source,  kmeansResults[i].centroids[j]);
-				if(dist > distToCentroid){
-					cindex = j;
-					dist = distToCentroid;
-				}
-			}
-			
-			nearestCentroids[i] = cindex;
-		}
-		
+	public static DataSet query(DataPacket source, DataSet data, double epsilon, KMeansLSHResult[] kmeansResults, int probecount){
 		
 		HashMap<DataPacket,Boolean> neighbors = new HashMap<DataPacket, Boolean>();		//use hashmap to remove duplicates
 		
 		int searchspace = 0;
 		
-		//for each centroid index, perform a linear search among the indices
-		for (int i = 0; i < nearestCentroids.length; i++) {
+		
+		for (int i = 0; i < kmeansResults.length; i++) {
 			
-			//
-			for (int j = 0; j < kmeansResults[i].index.length; j++) {
-				DataSet compareTo = kmeansResults[i].index[i];
+			//find the nearest centroids
+			PriorityQueue<CentroidIndex> nearestCentroids = new PriorityQueue<CentroidIndex>(probecount+1);			
+			for (int j = 0; j < kmeansResults[i].centroids.length; j++) {
+				double cdist = kmeansIndexdist(source, kmeansResults[i].centroids[j]);				
 				
-				System.out.println("\tSearchspace: i="+ i+" J = "+j+"\t "+ compareTo.size());
+				nearestCentroids.add(new CentroidIndex(j, cdist));
+				if(nearestCentroids.size() > probecount){
+					nearestCentroids.remove();
+				}
+			}
+			
+			
+			while(nearestCentroids.size() != 0){
+				CentroidIndex ci = nearestCentroids.remove();
+				DataSet compareTo = kmeansResults[i].index[ci.centroidID];
+				
+//				System.out.println("\tSearchspace: i="+ i+" Centroid = "+ci.centroidID+"\t "+ compareTo.size());
 				searchspace += compareTo.size();
+				
 				for (DataPacket dataPacket : compareTo) {
 					if (source.equals(dataPacket))
 						continue;
@@ -252,8 +270,15 @@ public class KMeans {
 					}
 				}
 			}
+			
 		}
-		System.out.println("Total Searchspace: "+ searchspace);
+		
+		
+		
+		
+		System.out.println("\tSize "+ data.size()+" Total Searchspace: "+ searchspace + "\tNeighbor Count: " + neighbors.size());		
+		System.out.println("\tpercent:" +(searchspace*100.0/data.size()));
+		
 		//transfer keys to DataSet;
 		Object dp[]  =  (neighbors.keySet().toArray());
 		//initialize heap to track neighbors
@@ -270,33 +295,40 @@ public class KMeans {
 	public static void main(String[] args) {
 		System.out.println("KMeansLSH-Unit Test:");
 		
-		int testItem = 13, trainItem = 10;
+		int testItem = 5, trainItem = 9;
 		
-		String DataDirectory = "RandomPieces_100";
-		String trainFilename = "ids100_"+trainItem+".data";
-		String testFilename = "ids100_"+testItem+".data";
-		String OpticsFilename = "ids100_" + trainItem + "-" + testItem + ".optics";
+		String DataDirectory = "RandomPieces_10";
+		String trainFilename = "ids10_"+trainItem+".data";
+		String testFilename = "ids10_"+testItem+".data";
+		String OpticsFilename = "ids10_" + trainItem + "-" + testItem + ".optics";
 		
 		
 		String InputTrainingFilePath = DataDirectory + File.separatorChar + trainFilename;
 		String InputTestFilePath = DataDirectory + File.separatorChar + testFilename;
 		String OutputFilePath = DataDirectory + File.separatorChar +  OpticsFilename;
 		
-		double epsilon = 70;//00; //7000 originally
+		double epsilon = 7000;//00; //7000 originally
 		int minPts = 6;
 		
 		
 		
 		
 		
+		DataSet normalizedData;
+		boolean partialSet = true;
+		if(partialSet){
+			DataSet trainData = DataSetReader.readTrainingSet(InputTrainingFilePath);
+//			DataSet testData = DataSetReader.readTestSet(InputTestFilePath);		
+//			DataSet experimentData = DataIntegration.combine(trainData, testData);		
+//			normalizedData =  DataNormalization.normalizeIntegerScaling(experimentData);
+			normalizedData =  DataNormalization.normalizeIntegerScaling(trainData);
+		}else{
+			DataSet trainData = DataSetReader.readTrainingSet("Data"+File.separatorChar+"ids.data");
+			normalizedData =  DataNormalization.normalizeIntegerScaling(trainData);
+		}
 		
-//		DataSet trainData = DataSetReader.readTrainingSet("Data"+File.separatorChar+"ids.data");
 		
-		DataSet trainData = DataSetReader.readTrainingSet(InputTrainingFilePath);
-		DataSet testData = DataSetReader.readTestSet(InputTestFilePath);		
-		DataSet experimentData = DataIntegration.combine(trainData, testData);		
-		DataSet normalizedData =  DataNormalization.normalizeIntegerScaling(experimentData);
-//		DataSet normalizedData =  DataNormalization.normalizeIntegerScaling(trainData);
+		
 		
 		
 		System.out.println("DataSize:" + normalizedData.size());
@@ -305,13 +337,12 @@ public class KMeans {
 		
 		
 		// ******************* START OF INDEXING *********************
-		System.out.println("Indexing...");
 		int runs = 1;
 		int samplesize = dataset.size()/2;
-		int k = 500;//500;
+		int k = (int) Math.sqrt(dataset.size()/2);
 		int itr = 4;
-		int probecount = 1;
-		
+		int probecount = 1;		//MUST BE LESS THAN K (set a percentage of k, consider # of runs)
+		System.out.println("Centroids:"+k);
 		KMeansLSHResult result[] = new KMeansLSHResult[runs];
 		
 		double LSHDuration = System.currentTimeMillis();
@@ -320,7 +351,7 @@ public class KMeans {
 			double LSHRunDuration = System.currentTimeMillis();
 			
 			DataPacket[] centroids = KMeans.runKMeansClusteringPhase(dataset, samplesize, k, itr);
-			DataSet indices[]  = KMeans.index(dataset, centroids, probecount);
+			DataSet indices[]  = KMeans.index(dataset, centroids);
 			result[j] = new KMeansLSHResult(centroids,indices,probecount);			
 			
 			
@@ -332,13 +363,19 @@ public class KMeans {
 		
 		// ******************* END OF INDEXING *********************
 		
+		
+		double totalLinearSearch = 0, totalIndexedSearch = 0, totalRecall = 0;
+		
+		
 		for (int i = 0; i < dataset.size(); i++) {
 			DataPacket object = dataset.elementAt(i);
 			
-			System.out.println("Actual Start...");
+			
 			double ActualDuration = System.currentTimeMillis();
-			DataSet actualNeighbors = NearestNeighborCompute.findNeighbors(dataset,  object, epsilon);		
-			System.out.println("Linear Search Time :" + (System.currentTimeMillis()-ActualDuration)/1000.0);
+			DataSet actualNeighbors = NearestNeighborCompute.findNeighbors(dataset,  object, epsilon);	
+//			DataSet actualNeighbors = ParallelNearestNeighbor.findNeighbors(dataset,  object, epsilon);	
+			double LinearSearchTime =  (System.currentTimeMillis()-ActualDuration)/1000.0;
+			
 			
 			
 			
@@ -346,28 +383,57 @@ public class KMeans {
 			
 			
 			double QueryDuration = System.currentTimeMillis();			
-			DataSet indexedNeighbors = KMeans.query(object, dataset, epsilon, result);			
-			System.out.println("Total QueryTime:" + (System.currentTimeMillis()-QueryDuration)/1000.0);
+			DataSet indexedNeighbors = KMeans.query(object, dataset, epsilon, result,probecount);	
+			double IndexedSearchTime = (System.currentTimeMillis()-QueryDuration)/1000.0;
 			
 			
-			System.out.println("Actual Neighbor Size" + actualNeighbors.size());
-			System.out.println("Esimate Neighbor Size" + indexedNeighbors.size());
+//			System.out.println("LinearSearch: " + LinearSearchTime + "\tIndexed Time:" + IndexedSearchTime);	
+//			System.out.println("Actual Neighbor Size " + actualNeighbors.size());
+//			System.out.println("Esimate Neighbor Size " + indexedNeighbors.size());
+//			
+//			
+//			
+//			System.out.println();
 			
+			totalLinearSearch += LinearSearchTime;
+			totalIndexedSearch += IndexedSearchTime;
+			totalRecall += computeRecall(actualNeighbors, indexedNeighbors);
 			
-			
-			
-			
-			
-			break; //no loop
+			if(i % 10 == 0){
+				System.out.println("Completed: " + i*1.0/dataset.size()+ "\t"+i+"/"+ dataset.size());
+				
+				System.out.println("Total LinearSearch: " + totalLinearSearch + "\t Total Indexed Time:" + totalIndexedSearch);	
+				System.out.println("Total Recall: " + totalRecall + "\tAverage Recall: " + totalRecall/ i);
+			}
 		}
-		
-		System.out.println("FIX Some CENTROIDS have no members");
-		System.out.println("FIX INDEXING");
+		System.out.println("***************************");
+		System.out.println("Total LinearSearch: " + totalLinearSearch + "\t Total Indexed Time:" + totalIndexedSearch);	
+		System.out.println("Average Recall: " + totalRecall/ dataset.size());
 		
 		System.out.println("End");
 		
 	}
 	
+	
+	public static double computeRecall(DataSet actual, DataSet indexed){
+		
+		int included_count = 0;
+		for (int i = 0; i < actual.size(); i++) {
+			//check if included in actual
+			
+			DataPacket actualNeighbor = actual.elementAt(i);
+			if(indexed.contains(actualNeighbor)){
+				included_count++;
+			}
+			
+		}
+		
+//		System.out.println("Included " + included_count + " / " + actual.size() + " = " + included_count*1.0/actual.size());
+		if(actual.size() == 0) return 0;
+		
+		return included_count*1.0/actual.size();
+		
+	}
 	
 	
 

@@ -24,7 +24,7 @@ public class NearestNeighborCompute {
 
 	public static double includedMaxAttr[] = null;
 	public static double includedMinAttr[] = null;
-	public static final double PREFERRED_RANGE = 46340.0; // sqrt (int range)
+	public static final double PREFERRED_RANGE = Math.sqrt(Integer.MAX_VALUE);
 	static boolean displaystats = false;
 	
 	public static boolean useParallelSearch = false;
