@@ -22,8 +22,8 @@ public class OpticsEvaluation {
 	
 	public static void main(String[] args) {
 		OpticsEvaluation opticsEval = new OpticsEvaluation();
-		opticsEval.evaluate(32, 67);
-//		opticsEval.evaluate(34, 125);
+//		opticsEval.evaluate(32, 67);
+		opticsEval.evaluate(34, 125);
 //		opticsEval.evaluate(0, 1);
 		System.out.println("Done");
 	}
@@ -36,7 +36,11 @@ public class OpticsEvaluation {
 		ArrayList<ReachabilityPoint> ordering = OpticsOrderingReader.readFile(DataDirectory + File.separatorChar+opticsFilename);
 		
 		
-		findSteepAreas2(ordering, 0.2);
+		ArrayList<SteepArea> areas1 = findSteepAreas2(ordering, 6 ,0.2);
+		
+		for (int i = 0; i < areas1.size(); i++) {
+			System.out.println("Area "+i+ "\tS:" + areas1.get(i).startIndex + "\tE:"+ areas1.get(i).endIndex + "\tsize:  "+( areas1.get(i).endIndex- areas1.get(i).startIndex+1));
+		}
 		
 		if(true)  return;
 		
@@ -79,7 +83,36 @@ public class OpticsEvaluation {
 
 	}
 	
-	public void findSteepAreas2(ArrayList<ReachabilityPoint> buffer, double xi){
+	public void extractClusters(ArrayList<SteepArea> areas,ArrayList<ReachabilityPoint> points){
+		
+		int size = points.size();
+		int currentAreaIndex = 0;
+		SteepArea currentArea = areas.get(currentAreaIndex);
+		
+		ArrayList<SteepArea> clusters = new ArrayList<>();
+		double mib = 0;
+		for (int i = 0; i < size; i++) {
+			
+			if(i > currentArea.endIndex ){						
+				currentAreaIndex++;
+				currentArea = areas.get(currentAreaIndex);
+			}
+			
+			if(i == currentArea.startIndex && !currentArea.isSteepUp){				//if index is a start of a steep down
+				SteepArea potentialCluster = new SteepArea();
+				potentialCluster.startIndex = i;
+				potentialCluster.mib = 0;
+				clusters.add(potentialCluster);
+			}else if(i == currentArea.startIndex && currentArea.isSteepUp){			//if index is a start of a steep up
+				//check if possible cluster end
+					//increment to the next steepup point
+			}
+			
+		}
+	}
+	
+	
+	public ArrayList<SteepArea> findSteepAreas2(ArrayList<ReachabilityPoint> buffer, int minpts, double xi){
 		
 		int size = buffer.size();
 		
@@ -93,12 +126,16 @@ public class OpticsEvaluation {
 		isAsLow[0] = true;
 		
 		
-		int mintpts = 6;
+		minpts = 6;
 		int start = -1; 
 		int end = -1;
 		int nonConseq = 0;
 		boolean isSteepUp = false;
 		boolean isInSteepArea = false;
+		
+		ArrayList<SteepArea> steepAreas = new ArrayList<SteepArea>();
+		SteepArea lastArea = null;
+		int max = 0,smax = 0;
 		
 		for (int i = 0; i < size; i++) {
 			
@@ -118,7 +155,55 @@ public class OpticsEvaluation {
 			
 			
 			
-			
+			if(isInSteepArea){				
+				
+				if(isSteepUp){
+					if(isSteepDownPoint[i]){
+						isInSteepArea=false;
+					}else if(isSteepUpPoint[i] && isAsHigh[i]){
+						end = i;								//update end
+					}else if(isAsHigh[i]){						//if not steep point but as high
+						nonConseq++;				
+						if(nonConseq > minpts){
+							isInSteepArea=false;	//stop 
+						}
+					}else if( !isAsHigh[i] ){						
+						isInSteepArea=false;
+					}
+				
+					
+					
+					
+				}else{
+					if(isSteepUpPoint[i]){
+						isInSteepArea=false;
+					}else if(isSteepDownPoint[i] && isAsLow[i]){
+						end = i;								//update end
+					}else if(isAsLow[i]){						//if not steep point but as low
+						nonConseq++;				
+						if(nonConseq > minpts){
+							isInSteepArea=false;	//stop 
+						}
+					}else if( !isAsLow[i]){
+						isInSteepArea=false;
+					}
+				}
+				
+				if(isInSteepArea == false){					//if terminated
+					if(lastArea == null || lastArea.endIndex != start){
+						lastArea = new SteepArea();
+						lastArea.startIndex = start;
+						lastArea.endIndex = end;
+						lastArea.isSteepUp = isSteepUp;
+						steepAreas.add(lastArea);	
+						if(max < end-start+1){
+							max = end-start+1;
+							smax = start;
+						}
+					}
+				}
+
+			}
 			
 			
 			if(!isInSteepArea){
@@ -126,69 +211,40 @@ public class OpticsEvaluation {
 					isSteepUp = true;
 					isInSteepArea = true;
 					start = i;
+					end = i;
 				}else if(isSteepDownPoint[i]){
 					isSteepUp = false;
 					isInSteepArea = true;
 					start = i;
+					end = i;
 					
 				}
 				nonConseq=0;
 			
 			
-			}else{
-				
-				//update end if steep point
-				if(isSteepUp && isSteepUpPoint[i] && isAsHigh[i]){					
-					end = i;
-				}else if(!isSteepUp && isSteepDownPoint[i] && isAsLow[i] ){					
-					end = i;
-					
-					
-					
-				}else if(isSteepUp && isAsHigh[i]){					
-					nonConseq++;				//increment limit
-					if(nonConseq > mintpts){
-						isInSteepArea=false;	//stop 
-					}
-				}else if(!isSteepUp && isAsLow[i]){					
-					nonConseq++;				//increment limit
-					if(nonConseq > mintpts){
-						isInSteepArea=false;	//stop 
-					}
-				}else if (isSteepUp && !isAsHigh[i]){
-					isInSteepArea=false;
-				}else if (!isSteepUp && !isAsLow[i]){
-					isInSteepArea=false;
+			}
+			
+			boolean showCalculations = false;	//show how steepareas computed
+			if(showCalculations){
+				System.out.print(i);				
+				System.out.print("\t" + isSteepUpPoint[i]+ "\t"  + isSteepDownPoint[i]+"\t"+isAsHigh[i]  +"\t"+isAsLow[i]);					
+				System.out.print("\t|"+isInSteepArea );
+				if (isInSteepArea) {
+					System.out.print("\t"+(isSteepUp? "UP":"DWN"));
+					System.out.print("\t"+start+"|\t|"+end);
+				}else{
+					System.out.print("\t---\t\t");
 				}
-				
-				
-				
+				System.out.print("\t"+nonConseq);				
+				System.out.println("\t" + currentpoint.reachability+"\t" + nextPoint.reachability);
 			}
-			
-			
-			System.out.print(i);
-			
-			System.out.print("\t" + isSteepUpPoint[i]+ "\t"  + isSteepDownPoint[i]+"\t"+isAsHigh[i]  +"\t"+isAsLow[i]);
-//			System.out.print("\t|" + (isSteepUpPoint[i]^ isSteepDownPoint[i])+"\t"+(isAsHigh[i] ^ isAsLow[i]));
-			
-			
-			System.out.print("\t|"+isInSteepArea );
-			if (isInSteepArea) {
-				System.out.print("\t"+(isSteepUp? "UP":"DWN"));
-				System.out.print("\t"+start+"|\t|"+end);
-			}else{
-				System.out.print("\t---\t\t");
-			}
-			System.out.print("\t"+nonConseq);
-			
-			
-			System.out.println("\t" + currentpoint.reachability+"\t" + nextPoint.reachability);
+		
 			
 			
 		}
 		
-		
-		
+		System.out.println("Max " + max+ " smax"  + smax);
+		return steepAreas;
 	
 		
 		
@@ -213,7 +269,7 @@ public class OpticsEvaluation {
 	
 	private boolean isAsHigh(double reachability, double reachabilityNext){
 		if(reachabilityNext<0)
-			return true;
+			return !(reachability <0);
 		if(reachability <0)
 			return false;
 		return reachability <= reachabilityNext;
@@ -221,7 +277,7 @@ public class OpticsEvaluation {
 
 	private boolean isAsLow(double reachability, double reachabilityNext){
 		if(reachability <0)
-			return true;
+			return !(reachabilityNext <0);
 		if(reachabilityNext<0)
 			return false;
 		return reachability >= reachabilityNext;
