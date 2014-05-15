@@ -18,6 +18,9 @@ import fileIO.DataSetReader;
 public class KMeans {
 	
 	
+	public static void sampleDatabase(DataSet D,double percentage){
+		
+	}
 	
 	/**
 	 * Returns a array of Centroids 
@@ -295,43 +298,23 @@ public class KMeans {
 	public static void main(String[] args) {
 		System.out.println("KMeansLSH-Unit Test:");
 		
-		int testItem = 5, trainItem = 9;
+		int trainItem = 9;
 		
 		String DataDirectory = "RandomPieces_10";
-		String trainFilename = "ids10_"+trainItem+".data";
-		String testFilename = "ids10_"+testItem+".data";
-		String OpticsFilename = "ids10_" + trainItem + "-" + testItem + ".optics";
-		
-		
+		String trainFilename = "ids10_"+trainItem+".data";		
 		String InputTrainingFilePath = DataDirectory + File.separatorChar + trainFilename;
-		String InputTestFilePath = DataDirectory + File.separatorChar + testFilename;
-		String OutputFilePath = DataDirectory + File.separatorChar +  OpticsFilename;
+
 		
 		double epsilon = 7000;//00; //7000 originally
 		int minPts = 6;
 		
-		
-		
-		
-		
-		DataSet normalizedData;
-		boolean partialSet = true;
-		if(partialSet){
-			DataSet trainData = DataSetReader.readTrainingSet(InputTrainingFilePath);
-//			DataSet testData = DataSetReader.readTestSet(InputTestFilePath);		
-//			DataSet experimentData = DataIntegration.combine(trainData, testData);		
-//			normalizedData =  DataNormalization.normalizeIntegerScaling(experimentData);
-			normalizedData =  DataNormalization.normalizeIntegerScaling(trainData);
-		}else{
-			DataSet trainData = DataSetReader.readTrainingSet("Data"+File.separatorChar+"ids.data");
-			normalizedData =  DataNormalization.normalizeIntegerScaling(trainData);
-		}
-		
-		
-		
-		
-		
+
+
+		DataSet trainData = DataSetReader.readTrainingSet(InputTrainingFilePath);		
+		DataSet normalizedData =  DataNormalization.normalizeIntegerScaling(trainData);		
 		System.out.println("DataSize:" + normalizedData.size());
+		
+		
 		DataSet dataset = normalizedData;
 		double perf = 0.0;
 		
@@ -342,6 +325,7 @@ public class KMeans {
 		int k = (int) Math.sqrt(dataset.size()/2);
 		int itr = 4;
 		int probecount = 1;		//MUST BE LESS THAN K (set a percentage of k, consider # of runs)
+		
 		System.out.println("Centroids:"+k);
 		KMeansLSHResult result[] = new KMeansLSHResult[runs];
 		
@@ -372,7 +356,7 @@ public class KMeans {
 			
 			
 			double ActualDuration = System.currentTimeMillis();
-			DataSet actualNeighbors = NearestNeighborCompute.findNeighbors(dataset,  object, epsilon);	
+			DataSet actualNeighbors = NearestNeighborCompute.findNeighborsAndCoreDist(dataset,  object, minPts,epsilon);	
 //			DataSet actualNeighbors = ParallelNearestNeighbor.findNeighbors(dataset,  object, epsilon);	
 			double LinearSearchTime =  (System.currentTimeMillis()-ActualDuration)/1000.0;
 			
@@ -415,14 +399,21 @@ public class KMeans {
 	}
 	
 	
+	/**
+	 * Percentage of Actual Neighbors included in the query 
+	 * Computed as intersection(actual,indexed)/ actual.size
+	 * @param actual
+	 * @param indexed
+	 * @return
+	 */
 	public static double computeRecall(DataSet actual, DataSet indexed){
 		
 		int included_count = 0;
-		for (int i = 0; i < actual.size(); i++) {
+		for (int i = 0; i < indexed.size(); i++) {
 			//check if included in actual
 			
-			DataPacket actualNeighbor = actual.elementAt(i);
-			if(indexed.contains(actualNeighbor)){
+			DataPacket indexedNeighbor = indexed.elementAt(i);
+			if(actual.contains(indexedNeighbor)){
 				included_count++;
 			}
 			

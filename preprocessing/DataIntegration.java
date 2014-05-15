@@ -23,6 +23,10 @@ public class DataIntegration {
 		ds.addAll(test);
 		training.removeAllElements();
 		test.removeAllElements();
+		int size = ds.size();
+		for (int i = 0; i < size; i++) {
+			ds.elementAt(i).DataPacketID = i;
+		}
 		return ds;
 	}
 

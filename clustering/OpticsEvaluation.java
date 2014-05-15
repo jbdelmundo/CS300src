@@ -4,6 +4,8 @@ package clustering;
 import java.io.File;
 import java.util.ArrayList;
 
+import javax.xml.ws.Endpoint;
+
 import data.MinHeap;
 import data.ReachabilityPoint;
 import data.SteepArea;
@@ -23,7 +25,7 @@ public class OpticsEvaluation {
 	public static void main(String[] args) {
 		OpticsEvaluation opticsEval = new OpticsEvaluation();
 //		opticsEval.evaluate(32, 67);
-		opticsEval.evaluate(34, 125);
+		opticsEval.evaluate(3, 23);
 //		opticsEval.evaluate(0, 1);
 		System.out.println("Done");
 	}
@@ -38,8 +40,19 @@ public class OpticsEvaluation {
 		
 		ArrayList<SteepArea> areas1 = findSteepAreas2(ordering, 6 ,0.2);
 		
+		ArrayList<SteepArea> clusters = extractClusters(areas1, ordering, 600, 0.001);
+		
+		
+		
+		
+//		OpticsPlot.plotGraphAreas("Clusters", ordering, clusters);
+		
 		for (int i = 0; i < areas1.size(); i++) {
 			System.out.println("Area "+i+ "\tS:" + areas1.get(i).startIndex + "\tE:"+ areas1.get(i).endIndex + "\tsize:  "+( areas1.get(i).endIndex- areas1.get(i).startIndex+1));
+		}
+		
+		for (int i = 0; i < clusters.size(); i++) {
+			System.out.println(i+"\t" + clusters.get(i).startIndex + "\t" + + clusters.get(i).endIndex);
 		}
 		
 		if(true)  return;
@@ -66,7 +79,7 @@ public class OpticsEvaluation {
 		}
 		
 		
-		OpticsPlot.plotGraph("Eval", ordering, OpticsPlot.BY_TRAIN_VS_TEST, areas);
+		OpticsPlot.plotGraphAreas("Eval", ordering, areas);
 		
 //		ordering = assignToCluster(ordering,areas);				//fill values of assignedLabel Field
 //		
@@ -83,32 +96,162 @@ public class OpticsEvaluation {
 
 	}
 	
-	public void extractClusters(ArrayList<SteepArea> areas,ArrayList<ReachabilityPoint> points){
+	public ArrayList<SteepArea> extractClusters(ArrayList<SteepArea> areas,ArrayList<ReachabilityPoint> points,int minpts, double xi){
 		
 		int size = points.size();
 		int currentAreaIndex = 0;
 		SteepArea currentArea = areas.get(currentAreaIndex);
 		
-		ArrayList<SteepArea> clusters = new ArrayList<>();
+		ArrayList<SteepArea> setOfSteepDownAreas = new ArrayList<>();
+		ArrayList<SteepArea> setOfClusters = new ArrayList<>();
+		
+		ReachabilityPoint index;
 		double mib = 0;
-		for (int i = 0; i < size; i++) {
+		for (int i = 0; i < size; ) {
 			
-			if(i > currentArea.endIndex ){						
+			if(i > currentArea.endIndex && currentAreaIndex < areas.size()-1 ){						
 				currentAreaIndex++;
 				currentArea = areas.get(currentAreaIndex);
 			}
 			
+			index = points.get(i);			
+			
+			mib = Math.max(mib, index.reachability);
+			
 			if(i == currentArea.startIndex && !currentArea.isSteepUp){				//if index is a start of a steep down
-				SteepArea potentialCluster = new SteepArea();
-				potentialCluster.startIndex = i;
-				potentialCluster.mib = 0;
-				clusters.add(potentialCluster);
+				
+				//update mib values and filter
+				for (int j = 0; j< setOfSteepDownAreas.size(); j++) {
+					SteepArea D = setOfSteepDownAreas.get(j);
+					
+					D.mib = Math.max(D.mib, index.reachability);
+					
+					ReachabilityPoint start = points.get(D.startIndex);
+					if(start.reachability *(1-xi) < mib ){
+						setOfSteepDownAreas.remove(j);
+						j--;
+						
+					}	
+				}
+				
+				
+				currentArea.mib = 0;
+				setOfSteepDownAreas.add(currentArea);
+				
+				i = currentArea.endIndex + 1;
+				index = points.get(i);
+				mib = index.reachability;
+				
 			}else if(i == currentArea.startIndex && currentArea.isSteepUp){			//if index is a start of a steep up
-				//check if possible cluster end
-					//increment to the next steepup point
+				
+				//update and filter
+				for (int j = 0; j< setOfSteepDownAreas.size(); j++) {
+					SteepArea D = setOfSteepDownAreas.get(j);
+					
+					D.mib = Math.max(D.mib, index.reachability);
+					
+					ReachabilityPoint start = points.get(D.startIndex);
+					if(start.reachability *(1-xi) < mib ){
+						setOfSteepDownAreas.remove(j);
+						j--;
+					}	
+				}
+				
+				i = currentArea.endIndex + 1;
+				index = points.get(i);
+				mib = index.reachability;
+				
+				for (SteepArea D : setOfSteepDownAreas) {
+					
+					//check combination of D and currentSteepArea 						
+					
+					ReachabilityPoint end;
+					if(currentArea.endIndex != points.size()){
+						end = points.get(currentArea.endIndex+1);
+						if(D.mib * (1-xi) >= end.reachability){
+							continue;				//fail at condition 3b
+						}
+					
+					
+						
+						//Startpoint is in steepdownarea, end point is in steepuparea, interval >=minpts, end
+						
+						int clusterstart = -1,clusterend = -1;
+							
+						ReachabilityPoint start = points.get(D.startIndex);
+						
+						if(start.reachability *  (1-xi) >= end.reachability || (start.reachability < 0 && end.reachability >=0 )){
+							clusterend = currentArea.endIndex;
+							
+							for (int j = D.startIndex; j < D.endIndex; j++) {
+								double startReachability = points.get(j).reachability;
+								if(startReachability*(1-xi) < end.reachability){
+									clusterstart = j;
+									break;
+								}
+							}
+							
+						}else if(end.reachability * (1-xi) >= start.reachability || (end.reachability <0 && start.reachability >=0)){
+							
+							clusterstart = D.startIndex;
+							
+							for (int j = currentArea.endIndex; j >= currentArea.startIndex; j--) {
+								double endReachability = points.get(j).reachability;
+								if(endReachability*(1-xi) < start.reachability){
+									clusterend = j;
+									break;
+								}
+								
+							}
+							
+						}else{
+							clusterstart = D.startIndex;
+							clusterend = currentArea.endIndex;
+						}
+					
+					
+					
+						//check clustersize
+						int clustersize =  currentArea.endIndex - D.startIndex + 1;
+						if(clustersize < minpts)
+							continue;
+						
+						SteepArea cluster = new SteepArea();
+						cluster.startIndex = clusterstart;
+						cluster.endIndex = clusterend;
+						
+						setOfClusters.add(cluster);
+						
+					}else{
+						//if steepup area ends at the last point, dont compare anymore
+						
+						//check clustersize
+						int clustersize =  currentArea.endIndex - D.startIndex ;
+						if(clustersize < minpts)
+							continue;
+						
+						SteepArea cluster = new SteepArea();
+						cluster.startIndex = D.startIndex;
+						cluster.endIndex = currentArea.endIndex;
+						
+						setOfClusters.add(cluster);
+					}
+					
+					
+					
+					
+					
+					
+					
+				}//end of loop for steep down areas
+				
+			}else{
+				i++;
 			}
 			
-		}
+		}//end loop for all points
+		
+		return setOfClusters;
 	}
 	
 	

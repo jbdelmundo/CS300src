@@ -5,7 +5,7 @@ import java.util.Arrays;
 public class DataPacket extends OPTICSPoint implements ClusterPoint {
 
 	public char SymbolicAttr[];
-	public int ContinuousAttr[];
+	public long ContinuousAttr[];
 	public int DataPacketID;
 	public int label = -1;
 	public boolean hasLabel = true; // set false to make the label as
@@ -13,7 +13,7 @@ public class DataPacket extends OPTICSPoint implements ClusterPoint {
 	
 	public DataPacket(int symbolicSize, int continuousSize) {
 		this.SymbolicAttr = new char[symbolicSize];
-		this.ContinuousAttr = new int[continuousSize];
+		this.ContinuousAttr = new long[continuousSize];
 	}
 	
 	public DataPacket(DataPacket source){

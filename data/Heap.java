@@ -3,16 +3,20 @@ package data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.Vector;
 
 public  class Heap  {
 
 	/**
 	 * Abstact class of Max-Heap
 	 */
-	protected List<HeapObject> heap;
+	protected Vector<HeapObject> heap;
 
-    public Heap() {
-        heap = new ArrayList<HeapObject>();
+	public Heap() {
+        heap = new Vector<HeapObject>();
+    }
+	public Heap(int capacity) {
+        heap = new Vector<HeapObject>(capacity);
     }
 
     public void push(HeapObject obj) {

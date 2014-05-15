@@ -5,9 +5,12 @@ import data.HeapObject;
 public class ReachabilityPoint extends HeapObject{
 	public int index;
 	public double reachability;
+	public double core_dist;
 	public int label;
 	public boolean hasLabel;
 	public int assignedlabel;
+	
+	public static final int UNDEFINED = -1;
 	
 	@Override
 	public int compareTo(HeapObject o) {

@@ -5,6 +5,9 @@ public class OPTICSPoint extends HeapObject {
 		public double core_dist = -1;
 		public double reachability_dist = -1;
 		public boolean isProcessed = false;
+		
+		public double distToNeighbor;
+		public int neighborID;
 //		public DataSet neighbors;
 		
 		@Override

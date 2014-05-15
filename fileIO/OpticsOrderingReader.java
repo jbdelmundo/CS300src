@@ -37,9 +37,10 @@ public class OpticsOrderingReader {
 				
 			ReachabilityPoint currentpoint = new ReachabilityPoint();
 			currentpoint.index = i;
-			currentpoint.reachability = Double.parseDouble(read[1]);			
-			currentpoint.label = Integer.parseInt(read[2]);
-			currentpoint.hasLabel = Boolean.parseBoolean(read[3]);
+			currentpoint.reachability = Double.parseDouble(read[1]);
+			currentpoint.core_dist = Double.parseDouble(read[2]);
+			currentpoint.label = Integer.parseInt(read[3]);
+			currentpoint.hasLabel = Boolean.parseBoolean(read[4]);
 			
 			buffer.add(currentpoint);
 			

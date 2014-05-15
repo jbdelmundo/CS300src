@@ -32,11 +32,13 @@ public class DataSetReader {
 			Scanner scan = new Scanner(new File(FilePath));
 			DataSet ds = new DataSet();			
 			
-			
+			int id = 0;
 			while(scan.hasNext()){
 				String packetString = scan.nextLine();
 				DataPacket dp = createPacket(packetString,includeLabel);
+				dp.DataPacketID = id;
 				ds.add(dp);
+				id++;
 			}
 			scan.close();
 			return ds;

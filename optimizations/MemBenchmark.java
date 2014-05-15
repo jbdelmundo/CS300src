@@ -1,9 +1,15 @@
 package optimizations;
 
 public class MemBenchmark {
+	
+	
+	
+	
+	
 	public static void main(String[] args) throws InterruptedException {
 		
-		int dim1 = 480000;
+		//capacity 48k points
+		int dim1 = 49000;
 		System.out.println("Begin benchmark");
 		
 		double dist[] = new double[dim1 * (dim1 / 2)];

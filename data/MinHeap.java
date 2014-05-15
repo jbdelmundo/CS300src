@@ -2,6 +2,13 @@ package data;
 
 public class MinHeap extends Heap {
 
+	public MinHeap() {
+		super();
+	}
+	
+	public MinHeap(int capacity) {
+		super(capacity);
+	}
 	
 	
 	public void pushDown(int i) {

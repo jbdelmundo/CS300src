@@ -23,8 +23,8 @@ public class DataNormalization {
 		System.out.println("Normalizing based on Integer DataType");
 		
 		
-		int max[] = new int[Config.continuousAttibuteCount];
-		int min[] = new int[Config.continuousAttibuteCount];
+		long max[] = new long[Config.continuousAttibuteCount];
+		long min[] = new long[Config.continuousAttibuteCount];
 		Arrays.fill(min, -1);
 		
 		//compute min and max for continuous attributes;

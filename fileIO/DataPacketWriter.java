@@ -44,6 +44,7 @@ public class DataPacketWriter {
 	 */
 	public void printReachabilityPacketToFile(DataPacket datapacket){
 		double reachability_dist = datapacket.reachability_dist;
+		double core_dist = datapacket.core_dist;
 		int id = datapacket.DataPacketID;
 		int label = datapacket.label;
 		boolean hasLabel = datapacket.hasLabel;
@@ -56,7 +57,7 @@ public class DataPacketWriter {
 		}
 		
 		
-		pw.println(id+","+(reachability_dist)+","+label +","+hasLabel+ details);
+		pw.println(id+","+reachability_dist+","+core_dist+","+label +","+hasLabel+ details);
 	}
 	
 	public void printEvaluatedOpticsPackatToFile(MinHeap SteepAreaList){

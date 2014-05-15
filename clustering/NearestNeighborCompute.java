@@ -1,16 +1,15 @@
 package clustering;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.HashMap;
 import config.Config;
+import controller.IDS;
 
-import data.ConfigAttributes;
 import data.DataPacket;
 import data.DataSet;
+
+import data.ReachabilityPoint;
 import optimizations.DBConnection;
-import optimizations.ParallelNearestNeighbor;
-import preprocessing.DataNormalization;
 
 /**
  * NearestNeighborCompute performs N-N Search based on distance function
@@ -33,7 +32,7 @@ public class NearestNeighborCompute {
 	static HashMap<Integer, Boolean> isInDB = new HashMap<Integer, Boolean>();
 
 	/**
-	 * Nearest Neighbor Search using bruteforce
+	 * Finds the neighbors of the object and updates its core dist.
 	 * 
 	 * @param dataset
 	 *            Set of objects
@@ -41,27 +40,53 @@ public class NearestNeighborCompute {
 	 *            Object of reference
 	 * @param epsilon
 	 *            Distance threshold
-	 * @return datapoints whose distance is less than or equal to the threshold
+	 * @return Unprocessed Data points whose distance is less than or equal to the threshold
 	 */
-	public static DataSet findNeighbors(DataSet dataset, DataPacket object,
-			double epsilon) {
+	public static DataSet findNeighborsAndCoreDist(DataSet dataset, DataPacket object,
+			int minpts, double epsilon) {
 
-		if(useParallelSearch){
-			return ParallelNearestNeighbor.findNeighbors(dataset, object, epsilon);	
-		}
 		
 		
+		double core_dist = Double.MAX_VALUE;
+		int neighborcount = 0;
 		
 		DataSet neighbors = new DataSet();
 		for (DataPacket dataPacket : dataset) {
 
 			if (object.equals(dataPacket))
 				continue;
-			double dist = findDistance(object, dataPacket);
+			
+			double dist;
+			if(IDS.useDistCache){
+				dist = IDS.distCache.findDistance(object, dataPacket);
+			}else{
+				dist = NearestNeighborCompute.findDistance(object, dataPacket);
+			}
+				
+			
+			
 			// System.out.println("findNeighbors:" + dist);
 			if (epsilon >= dist) {
-				neighbors.add(dataPacket);
+				neighborcount++;
+				
+				if( !dataPacket.isProcessed){
+					neighbors.add(dataPacket);			//add only unprocessed points but keep track of neighbor count
+				}
+				
+				dataPacket.distToNeighbor = dist;
+				dataPacket.neighborID = object.DataPacketID;
+				core_dist = Math.min(core_dist, dist);	//pre-compute core distance			
 			}
+			
+			
+		}
+		
+		
+		//if core object, update core dist
+		if(neighborcount < minpts){
+			object.core_dist = ReachabilityPoint.UNDEFINED;
+		}else{
+			object.core_dist = core_dist;
 		}
 
 		return neighbors;
@@ -69,6 +94,7 @@ public class NearestNeighborCompute {
 	
 		
 	public static double findDistance(DataPacket dp1, DataPacket dp2) {
+		//used in neighbor search, OPTICS compute distance
 		return HOEM(dp1, dp2);			
 	}
 

@@ -234,7 +234,7 @@ public class OpticsPlot extends JFrame{
 		plotGraph(title, points, mode);
 	}
 	
-	public static void plotGraph(String title, ArrayList<ReachabilityPoint> points, int mode, ArrayList<SteepArea> areas ){
+	public static void plotGraphAreas(String title, ArrayList<ReachabilityPoint> points, ArrayList<SteepArea> areas ){
 		OpticsPlot demo = new OpticsPlot(title);
 		demo.pack();
 		RefineryUtilities.centerFrameOnScreen(demo);
@@ -244,15 +244,15 @@ public class OpticsPlot extends JFrame{
 		demo.addDataBySteepAreas(points, areas);
 	}
 	
-	public static void plotGraph(String title, String path, int mode, ArrayList<SteepArea> areas){
+	public static void plotGraphAreas(String title, String path, ArrayList<SteepArea> areas){
 		ArrayList<ReachabilityPoint> points  = OpticsOrderingReader.readFile(path);		
-		plotGraph(title, points, mode,areas);
+		plotGraphAreas(title, points, areas);
 	}
 	
 	public static void main(String[] args) {
 //		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_34-125.optics";
 //		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_32-67.optics";
-		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_0-1.optics";
+		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_3-23.optics";
 		 plotGraph("OpticsPlot",path, OpticsPlot.BY_ATTACK_CATEGORY);			
 	}
 }

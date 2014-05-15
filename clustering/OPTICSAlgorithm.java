@@ -1,6 +1,8 @@
 package clustering;
 
 import java.io.FileNotFoundException;
+
+import controller.IDS;
 import data.ConfigAttributes;
 import data.DataPacket;
 import data.DataSet;
@@ -27,11 +29,11 @@ public class OPTICSAlgorithm {
 			
 			if(!obj.isProcessed){				
 				ExpandClusterOrder(setOfObjects,obj, epsilon, minPts,OrderedFile);
-				System.out.println((processed*1.0/setOfObjects.size())+"%\t Point " + i + " of " +setOfObjects.size() + ": " +processed);
+				
+//				if(i % 1000 == 0 )
+//					System.out.println((processed*1.0/setOfObjects.size())+"%\t Point " + i + " of " +setOfObjects.size() + ": " +processed);
 			}
 			
-			
-//			break;	//TEMP
 		}
 		
 		OrderedFile.close();
@@ -43,18 +45,18 @@ public class OPTICSAlgorithm {
 	public void ExpandClusterOrder(DataSet setOfObjects, DataPacket obj, double epsilon, int minPts, DataPacketWriter OrderedFile){
 		
 		
-		DataSet neighbors = NearestNeighborCompute.findNeighbors(setOfObjects, obj, epsilon);
+		DataSet neighbors = NearestNeighborCompute.findNeighborsAndCoreDist(setOfObjects, obj, minPts,epsilon);
 		
 		obj.isProcessed = true;
 		processed++;
 		obj.reachability_dist = UNDEFINED*1000;
-		obj.core_dist = getCoreDistance(neighbors,obj, epsilon, minPts);
+		//obj.core_dist = getCoreDistance(neighbors,obj, epsilon, minPts);
 		
 		// OrderedFile.append(obj.toString());
 		OrderedFile.printReachabilityPacketToFile(obj);
 		
 		
-		MinHeap orderedSeeds = new MinHeap();	
+		MinHeap orderedSeeds = new MinHeap(setOfObjects.size());	
 	
 		
 		System.out.println("NeighborhoodSize:" + neighbors.size() );
@@ -67,20 +69,20 @@ public class OPTICSAlgorithm {
 //				System.out.println("Seedlist" + orderedSeeds.size() + "/t Procesed:"+processed+"/"+setOfObjects.size());
 				
 				
-				DataPacket currentObject = (DataPacket) orderedSeeds.pop() ;// get the least element
-				DataSet neighbors2 = NearestNeighborCompute.findNeighbors(setOfObjects, currentObject, epsilon);	//be sure to set
-				currentObject.isProcessed = true;
+				DataPacket currentSeed = (DataPacket) orderedSeeds.pop() ;// get the least element
+				DataSet neighbors2 = NearestNeighborCompute.findNeighborsAndCoreDist(setOfObjects, currentSeed,minPts, epsilon);	//be sure to set
+				currentSeed.isProcessed = true;
 				processed++;
-				currentObject.core_dist = getCoreDistance(neighbors2, currentObject, epsilon, minPts);
+				//currentObject.core_dist = getCoreDistance(neighbors2, currentObject, epsilon, minPts);
 				
-				// OrderedFile.append(currentObject.toString());
-				OrderedFile.printReachabilityPacketToFile(currentObject);
+				OrderedFile.printReachabilityPacketToFile(currentSeed);
 				
 				
-				if(currentObject.core_dist != UNDEFINED){
-					updateSeeds(orderedSeeds,neighbors2, currentObject);
+				if(currentSeed.core_dist != UNDEFINED){
+					updateSeeds(orderedSeeds,neighbors2, currentSeed);
 				}
-				if(orderedSeeds.size() % 1000 == 0)System.out.println((processed*1.0/setOfObjects.size())+"%\t"+"   Seedlist" + orderedSeeds.size() + "/t Procesed:"+processed+"/"+setOfObjects.size());
+				
+				if(processed % 10000 == 0)System.out.println((processed*1.0/setOfObjects.size())+"%\t"+"   Seedlist" + orderedSeeds.size() + "\t Procesed:"+processed+"/"+setOfObjects.size());
 			}
 			
 		}else{
@@ -89,12 +91,24 @@ public class OPTICSAlgorithm {
 	}//end expandCluster
 	
 
+	/**
+	 * Updates the reachability values of the seeds based on the current center object and adds its unprocessed neighbors 
+	 * @param orderedSeeds
+	 * @param neighbors
+	 * @param centerObj
+	 */
 	public void updateSeeds(MinHeap orderedSeeds, DataSet neighbors, DataPacket centerObj){
 		double c_dist = centerObj.core_dist;
 		
 		for (DataPacket obj : neighbors) {
 			if(!obj.isProcessed){
-				double new_r_dist = Math.max(c_dist, computeDistance(centerObj,obj));
+				double new_r_dist;
+				
+				if(obj.neighborID == centerObj.DataPacketID){
+					new_r_dist = Math.max(c_dist, obj.distToNeighbor);
+				}else{
+					new_r_dist =  Math.max(c_dist, computeDistance(centerObj,obj));
+				}
 				
 				if(obj.reachability_dist  == UNDEFINED){
 					obj.reachability_dist = new_r_dist;
@@ -131,8 +145,16 @@ public class OPTICSAlgorithm {
 	}
 	
 	public double computeDistance(DataPacket obj1, DataPacket obj2){
-		return NearestNeighborCompute.findDistance(obj1, obj2);
+		
+		if(IDS.useDistCache){
+			return  IDS.distCache.findDistance(obj1, obj2);
+		}else{
+			return  NearestNeighborCompute.findDistance(obj1, obj2);
+		}
+		
 	}
+	
+	
 	
 	
 	public static void main(String[] args) throws FileNotFoundException {

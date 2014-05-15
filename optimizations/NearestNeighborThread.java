@@ -2,6 +2,8 @@ package optimizations;
 
 import java.util.HashMap;
 
+import controller.IDS;
+
 import clustering.NearestNeighborCompute;
 
 import data.DataPacket;
@@ -42,6 +44,11 @@ public class NearestNeighborThread extends Thread {
 			DataPacket dataPacket = dataset.elementAt(ctr);
 
 			double dist = NearestNeighborCompute.findDistance(reference, dataPacket);
+			if(IDS.useDistCache){
+				dist =   IDS.distCache.findDistance(reference, dataPacket);
+			}else{
+				dist =   NearestNeighborCompute.findDistance(reference, dataPacket);
+			}
 			// System.out.println("findNeighbors:" + dist);
 			if (epsilon >= dist) {
 				parent.addNeighbor(dataPacket);

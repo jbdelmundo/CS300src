@@ -150,16 +150,16 @@ public class DataSetGenerator {
 //		
 //		System.out.println("Sequential Done");
 		
-		String directory2 = "RandomPieces_10";
+		String directory2 = "RandomPieces_1000";
 		DirectoryFactory.createDirectory(directory2);
-		dsg.generateNRandomPieces(10, directory2 +File.separatorChar+ "ids10");
+		dsg.generateNRandomPieces(1000, directory2 +File.separatorChar+ "ids1000");
 		
 		System.out.println("Random Done");
 		
-		directory2 = "SequentialPieces_10";
-		DirectoryFactory.createDirectory(directory2);
-		dsg.generateNSequentialPieces(10, directory2 +File.separatorChar+ "ids10");
-		
-		System.out.println("Sequential Done");
+//		directory2 = "SequentialPieces_10";
+//		DirectoryFactory.createDirectory(directory2);
+//		dsg.generateNSequentialPieces(10, directory2 +File.separatorChar+ "ids10");
+//		
+//		System.out.println("Sequential Done");
 	}
 }
