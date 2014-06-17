@@ -45,8 +45,7 @@ public class NearestNeighborCompute {
 	public static DataSet findNeighborsAndCoreDist(DataSet dataset, DataPacket object,
 			int minpts, double epsilon) {
 
-		
-		
+				
 		double core_dist = Double.MAX_VALUE;
 		int neighborcount = 0;
 		
@@ -89,6 +88,29 @@ public class NearestNeighborCompute {
 			object.core_dist = core_dist;
 		}
 
+		return neighbors;
+	}
+	
+	public static DataSet findNeighbors(DataSet dataset, DataPacket object,	 double epsilon) {
+
+		if(IDS.useKLSH){
+			return IDS.pkm.query(object, dataset, epsilon, IDS.kmeansResults, IDS.probecount);
+		}
+		
+		DataSet neighbors = new DataSet();
+		for (DataPacket dataPacket : dataset) {
+
+			if (object.equals(dataPacket))
+				continue;
+			
+			double dist = NearestNeighborCompute.findDistance(object, dataPacket);
+						
+			// System.out.println("findNeighbors:" + dist);
+			if (epsilon >= dist) {				
+				neighbors.add(dataPacket);						
+			}	
+		}
+		
 		return neighbors;
 	}
 	

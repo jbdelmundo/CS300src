@@ -83,32 +83,74 @@ public class ParallelKMeans {
 		
 		
 		double samplePercent = 1.00;
-		int k = 10;
-		int itr =10;
+		int k = 100;
+		int itr =5;
+		double epsilon = 1000;
+		int probecount = 3;
+		int indexcount = 3;
 		//Percentage overhead 0.5256419861788397 - k= 200
+		
+		//probecount :AR 96
+		
 		
 		System.out.println("Sampling...");
 		DataPacket samples[] = pkm.sampleDatabase(normalizedData, samplePercent);
 		
-		System.out.println("Clustering...");
-		long startCluster = System.currentTimeMillis();
-		DataPacket centroids[] = pkm.runKMeansClusteringPhase(samples, k, itr);
-		long endCluster = System.currentTimeMillis();
+		KMeansLSHResult[] kmeansResults =  new KMeansLSHResult[indexcount];
+		for (int i = 0; i < indexcount; i++) {
+			System.out.println("Clustering...");
+			long startCluster = System.currentTimeMillis();
+			DataPacket centroids[] = pkm.runKMeansClusteringPhase(samples, k, itr);
+			long endCluster = System.currentTimeMillis();
+			
+			
+			System.out.println("Indexing...");
+			long startIndex = System.currentTimeMillis();		
+			DataSet indices[] = pkm.index(normalizedData, centroids, samples);		
+			long endIndex = System.currentTimeMillis();
+			
+			
+			System.out.println("ClusterTime:" + (endCluster-startCluster)/1000.0);
+			System.out.println("IndexTime:" + (endIndex-startIndex)/1000.0);
+			kmeansResults[i] = new KMeansLSHResult(centroids, indices, probecount);
+		}
 		
 		
 		
+		long indexedSearchTime = 0, linearSearchTime = 0, recallTime = 0;
+		double TotalRecall = 0;
+		for (int i = 0; i < normalizedData.size(); i++) {
+			DataPacket source = normalizedData.elementAt(i);
+			
+			long startIndexSearch = System.currentTimeMillis();
+			DataSet indexedNeighbors = pkm.query(source, normalizedData, epsilon, kmeansResults, probecount);
+			long endIndexSearch = System.currentTimeMillis();
+			
+			indexedSearchTime+= (endIndexSearch - startIndexSearch);
+			
+			long startLinearSearch = System.currentTimeMillis();
+			DataSet linearNeighbors = NearestNeighborCompute.findNeighbors(normalizedData, source,  epsilon);
+			long endLinearSearch = System.currentTimeMillis();
+			
+			linearSearchTime += (endLinearSearch-startLinearSearch);
+			
+			long startRecall = System.currentTimeMillis();
+			double recall = computeRecall(linearNeighbors, indexedNeighbors);
+			long endRecall = System.currentTimeMillis();
+			
+			recallTime += recall;
+			
+			TotalRecall += recall;
+			System.out.println(i+"\tR:"+recall+"\tL:" + linearNeighbors.size()+ "\tI:"+indexedNeighbors.size() + "\tIT:" +(endIndexSearch - startIndexSearch) +  
+					"\tLT"+(endLinearSearch-startLinearSearch) + "\n\t\tAR:" + (TotalRecall/(i+1.0)) + "\tITT:"+indexedSearchTime + "\tLTT:"+linearSearchTime);
+			System.out.println("\tTotalSave:" + (linearSearchTime-indexedSearchTime) + "\tRT:"+ recall + "\tRTT: " +recallTime);
+			
+		}
 		
-		
-		System.out.println("Indexing...");
-		long startIndex = System.currentTimeMillis();		
-		DataSet indices[] = pkm.index(normalizedData, centroids, samples);		
-		long endIndex = System.currentTimeMillis();
-		
-		
-		
-		
-		System.out.println("ClusterTime:" + (endCluster-startCluster)/1000.0);
-		System.out.println("IndexTime:" + (endIndex-startIndex)/1000.0);
+		System.out.println("END BENCHMARK");
+		System.out.println("Ave Recall: " + TotalRecall*1.0/normalizedData.size() );
+		System.out.println("Index Search: " + indexedSearchTime);
+		System.out.println("Linear Search: " + linearSearchTime);
 		
 		System.out.println("End");
 		
@@ -195,16 +237,16 @@ public class ParallelKMeans {
 			for (int j = 0; j < centroids.length; j++) {
 				
 				
-				if(i != itr -1){
-					//no points assigned to centroid
-					if(N[j] == 0){					
-						centroids[j] = new DataPacket(samples[r.nextInt(samples.length)]);	//random centroid
-					}else{		
-						centroids[j] = updateCentroid(centroids[j],adjustmentCentroids[j], N[j]);		
-					}
+				
+				//no points assigned to centroid
+				if(N[j] == 0){					
+					centroids[j] = new DataPacket(samples[r.nextInt(samples.length)]);	//random centroid
+				}else{		
+					centroids[j] = updateCentroid(centroids[j],adjustmentCentroids[j], N[j]);		
 				}
 				
-				System.out.println("Centroid " + j + " Count: " +N[j]);
+				
+//				System.out.println("Centroid " + j + " Count: " +N[j]);
 				
 							
 				N[j] = 0;
@@ -342,7 +384,7 @@ public class ParallelKMeans {
 		joinThreads();
 		
 		System.out.println("End of threads");
-		boolean showstats = false;
+		boolean showstats = true;
 		if(showstats){
 			int overhead = 0;
 			int saved = 0;
@@ -381,7 +423,7 @@ public class ParallelKMeans {
 	 * 		DataPacket[k] Centroids
 	 * 		DataSet[k] index
 	 */
-	public static DataSet query(DataPacket source, DataSet data, double epsilon, KMeansLSHResult[] kmeansResults, int probecount){
+	public  DataSet query(DataPacket source, DataSet data, double epsilon, KMeansLSHResult[] kmeansResults, int probecount){
 		
 		HashMap<DataPacket,Boolean> neighbors = new HashMap<DataPacket, Boolean>();		//use hashmap to remove duplicates
 		
@@ -409,6 +451,14 @@ public class ParallelKMeans {
 //				System.out.println("\tSearchspace: i="+ i+" Centroid = "+ci.centroidID+"\t "+ compareTo.size());
 				searchspace += compareTo.size();
 				
+				
+//				initThreads();
+//				setThreadBounds(compareTo.size(), this.threadCount);
+//				ParallelKMeansThread.setQueryParameters(compareTo, source, epsilon, neighbors);
+//				ParallelKMeansThread.threadTask = ParallelKMeansThread.INDEX;		
+//				startThreads();
+//				joinThreads();
+				
 				for (DataPacket dataPacket : compareTo) {
 					if (source.equals(dataPacket))
 						continue;
@@ -425,10 +475,12 @@ public class ParallelKMeans {
 		
 		
 		
-		System.out.println("\tSize "+ data.size()+" Total Searchspace: "+ searchspace + "\tNeighbor Count: " + neighbors.size());		
-		System.out.println("\tpercent:" +(searchspace*100.0/data.size()));
-		
+	
+//		System.out.println("\tpercent:" +(searchspace*100.0/data.size()));
+//		System.out.println("");
+	
 		//transfer keys to DataSet;
+		
 		Object dp[]  =  (neighbors.keySet().toArray());
 		//initialize heap to track neighbors
 		DataSet nearestNeighbors = new DataSet(dp.length);
@@ -465,7 +517,7 @@ public class ParallelKMeans {
 		}
 		
 //		System.out.println("Included " + included_count + " / " + actual.size() + " = " + included_count*1.0/actual.size());
-		if(actual.size() == 0) return 0;
+		if(actual.size() == 0) return 1;
 		
 		return included_count*1.0/actual.size();
 		

@@ -9,8 +9,21 @@ public class SteepArea extends HeapObject{
 	public boolean isSteepUp;
 	public boolean isFlat = false;
 	
-	@Override
+	public static final boolean UP = true;
+	public static final boolean DOWN = false;
 	
+	public SteepArea(){
+		super();
+	}
+	
+	public SteepArea(int start, int end, boolean isSteepUp) {
+		this.startIndex = start;
+		this.endIndex = end;
+		this.isSteepUp = isSteepUp;
+	}
+	
+		
+	@Override
 	public int compareTo(HeapObject o) {
 		if(startIndex < ((SteepArea)o).startIndex){
 			return -1;

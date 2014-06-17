@@ -12,7 +12,7 @@ import data.SteepArea;
 import fileIO.OpticsOrderingReader;
 import graph.OpticsPlot;
 
-public class OpticsEvaluation {
+public class OpticsEvaluation3 {
 	
 	ReachabilityPoint currentpoint;					//for iterations
 	ReachabilityPoint nextPoint = null;				//for iterations
@@ -23,30 +23,42 @@ public class OpticsEvaluation {
 	//double xi= 0.02;			//difference threshold
 	
 	public static void main(String[] args) {
-		OpticsEvaluation opticsEval = new OpticsEvaluation();
+		OpticsEvaluation3 opticsEval = new OpticsEvaluation3();
 //		opticsEval.evaluate(32, 67);
 		opticsEval.evaluate(1, 2);
 //		opticsEval.evaluate(0, 1);
 		System.out.println("Done");
 	}
 	
+	public void examineArea(ArrayList<SteepArea> areas){
+		for (SteepArea steepArea : areas) {
+			if(steepArea.isFlat){
+				System.out.println(steepArea.startIndex + " - " + steepArea.endIndex + "\tFlat" );
+			}else if(steepArea.isSteepUp){
+				System.out.println(steepArea.startIndex + " - " + steepArea.endIndex + "\tUP" );
+			}else{
+				System.out.println(steepArea.startIndex + " - " + steepArea.endIndex + "\tDown" );
+			}
+		}		
+	}
+	
 	public void evaluate(int trainItem, int testItem){
 		
-		String DataDirectory = "RandomPieces_200";
-		String opticsFilename = "ids200_" + trainItem + "-" + testItem + ".optics";
+		String DataDirectory = "RandomPieces_10000";
+		String opticsFilename = "test.optics";
 		
 		ArrayList<ReachabilityPoint> ordering = OpticsOrderingReader.readFile(DataDirectory + File.separatorChar+opticsFilename);
 		
 		int minpts = 200;
 		double xi = 0.2;
 		ArrayList<SteepArea> areas1 = findSteepAreas2(ordering, minpts ,xi);
-		
+		examineArea(areas1);
 		ArrayList<SteepArea> clusters = extractClusters(areas1, ordering, minpts, xi);
 		
 		
 		
 		
-		OpticsPlot.plotGraphAreas("Clusters", ordering, clusters);
+		OpticsPlot.plotGraphAreas("Clusters", ordering, areas1);
 		
 		for (int i = 0; i < areas1.size(); i++) {
 			System.out.println("Area "+i+ "\tS:" + areas1.get(i).startIndex + "\tE:"+ areas1.get(i).endIndex + "\tsize:  "+( areas1.get(i).endIndex- areas1.get(i).startIndex+1));

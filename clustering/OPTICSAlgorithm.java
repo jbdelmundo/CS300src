@@ -9,6 +9,7 @@ import data.DataSet;
 import data.MinHeap;
 import fileIO.DataPacketWriter;
 import optimizations.DBConnection;
+import preprocessing.DataIntegration;
 
 
 /**
@@ -23,6 +24,7 @@ public class OPTICSAlgorithm {
 
 	public void OPTICS(DataSet setOfObjects, double epsilon, int minPts, DataPacketWriter OrderedFile){
 		
+		
 				
 		for (int i = 0; i < setOfObjects.size(); i++) {
 			DataPacket obj = setOfObjects.elementAt(i);
@@ -35,7 +37,6 @@ public class OPTICSAlgorithm {
 			}
 			
 		}
-		
 		OrderedFile.close();
 		
 		System.out.println("Optics Algorithm: DONE");
@@ -45,12 +46,13 @@ public class OPTICSAlgorithm {
 	public void ExpandClusterOrder(DataSet setOfObjects, DataPacket obj, double epsilon, int minPts, DataPacketWriter OrderedFile){
 		
 		
-		DataSet neighbors = NearestNeighborCompute.findNeighborsAndCoreDist(setOfObjects, obj, minPts,epsilon);
+//		DataSet neighbors = NearestNeighborCompute.findNeighborsAndCoreDist(setOfObjects, obj, minPts,epsilon);
+		DataSet neighbors = NearestNeighborCompute.findNeighbors(setOfObjects, obj, epsilon);
 		
 		obj.isProcessed = true;
 		processed++;
 		obj.reachability_dist = UNDEFINED*1000;
-		//obj.core_dist = getCoreDistance(neighbors,obj, epsilon, minPts);
+		obj.core_dist = getCoreDistance(neighbors,obj, epsilon, minPts);
 		
 		// OrderedFile.append(obj.toString());
 		OrderedFile.printReachabilityPacketToFile(obj);
@@ -59,21 +61,22 @@ public class OPTICSAlgorithm {
 		MinHeap orderedSeeds = new MinHeap(setOfObjects.size());	
 	
 		
-		System.out.println("NeighborhoodSize:" + neighbors.size() );
+//		System.out.println("NeighborhoodSize:" + neighbors.size() );
 		
 
 		if(obj.core_dist != UNDEFINED){
 			updateSeeds(orderedSeeds,neighbors, obj);
 			
 			while(!orderedSeeds.isEmpty()){
-//				System.out.println("Seedlist" + orderedSeeds.size() + "/t Procesed:"+processed+"/"+setOfObjects.size());
+//				System.out.println("Seedlist " + orderedSeeds.size() + "\t Procesed:"+processed+"/"+setOfObjects.size());
 				
 				
 				DataPacket currentSeed = (DataPacket) orderedSeeds.pop() ;// get the least element
-				DataSet neighbors2 = NearestNeighborCompute.findNeighborsAndCoreDist(setOfObjects, currentSeed,minPts, epsilon);	//be sure to set
+//				DataSet neighbors2 = NearestNeighborCompute.findNeighborsAndCoreDist(setOfObjects, currentSeed,minPts, epsilon);	//be sure to set
+				DataSet neighbors2 = NearestNeighborCompute.findNeighbors(setOfObjects, currentSeed, epsilon);	//be sure to set
 				currentSeed.isProcessed = true;
 				processed++;
-				//currentObject.core_dist = getCoreDistance(neighbors2, currentObject, epsilon, minPts);
+				currentSeed.core_dist = getCoreDistance(neighbors2, currentSeed, epsilon, minPts);
 				
 				OrderedFile.printReachabilityPacketToFile(currentSeed);
 				
@@ -82,7 +85,7 @@ public class OPTICSAlgorithm {
 					updateSeeds(orderedSeeds,neighbors2, currentSeed);
 				}
 				
-				if(processed % 10000 == 0)System.out.println((processed*1.0/setOfObjects.size())+"%\t"+"   Seedlist" + orderedSeeds.size() + "\t Procesed:"+processed+"/"+setOfObjects.size());
+				if(processed % 1000 == 0)System.out.println((processed*1.0/setOfObjects.size())+"%\t"+"   Seedlist" + orderedSeeds.size() + "\t Procesed:"+processed+"/"+setOfObjects.size());
 			}
 			
 		}else{

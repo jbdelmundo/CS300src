@@ -19,6 +19,7 @@ import data.MinHeap;
  */
 public class DataPacketWriter {
 	PrintWriter pw;
+	int test = 0, train = 0;
 	
 	public DataPacketWriter() {
 		
@@ -55,10 +56,11 @@ public class DataPacketWriter {
 		for(int i = 0; i < datapacket.ContinuousAttr.length; i++){
 			details += ","+datapacket.ContinuousAttr[i];
 		}
-		
-		
+				
 		pw.println(id+","+reachability_dist+","+core_dist+","+label +","+hasLabel+ details);
 	}
+	
+	
 	
 	public void printEvaluatedOpticsPackatToFile(MinHeap SteepAreaList){
 		MinHeap temp =  new MinHeap();

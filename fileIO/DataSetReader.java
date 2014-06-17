@@ -49,7 +49,7 @@ public class DataSetReader {
 		return null;
 	}
 	
-	private static DataPacket createPacket(String inputString,boolean includeLabel){
+	public static DataPacket createPacket(String inputString,boolean includeLabel){
 		int isIncluded[] = Config.getIncludedAttributes();
 		String[] line = inputString.split(",");
 		
@@ -75,6 +75,8 @@ public class DataSetReader {
 		
 		return datapacket;
 	}
+	
+
 	
 	
 	public static void main(String[] args) {

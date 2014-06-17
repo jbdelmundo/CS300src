@@ -7,6 +7,9 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import config.Config;
+
+import data.DataPacket;
 import data.ReachabilityPoint;
 
 public class OpticsOrderingReader {
@@ -41,8 +44,11 @@ public class OpticsOrderingReader {
 			currentpoint.core_dist = Double.parseDouble(read[2]);
 			currentpoint.label = Integer.parseInt(read[3]);
 			currentpoint.hasLabel = Boolean.parseBoolean(read[4]);
+			boolean includeLabel = true;
+			currentpoint.datapacket = OpticsOrderingReader.createPacketFromOpticsFile(5, read, includeLabel);
 			
 			buffer.add(currentpoint);
+			
 			
 			
 			
@@ -52,5 +58,35 @@ public class OpticsOrderingReader {
 		
 		scan.close();
 		return buffer;
+	}
+	
+	public static DataPacket createPacketFromOpticsFile(int startIndex, String[] line,boolean includeLabel){
+		int isIncluded[] = Config.getIncludedAttributes();		
+		
+		DataPacket datapacket = new DataPacket(Config.symbiolicAttributeCount, Config.continuousAttibuteCount);
+		
+		int sIndex = startIndex, cIndex = 0;
+		for (int i = 0; i < Config.symbiolicAttributeCount; i++) {
+			
+			char attributeValue = line[sIndex].charAt(0);
+			
+			datapacket.SymbolicAttr[i] = (char)( attributeValue +65 );
+			
+			sIndex++;
+		}
+		
+		for (int i = 0; i < Config.continuousAttibuteCount; i++) {
+			long attributeValue = Long.parseLong(line[sIndex]);
+			
+			datapacket.ContinuousAttr[i] = attributeValue;
+			
+			sIndex++;
+		}
+		
+		int label = Integer.parseInt(line[line.length-1]);
+		datapacket.label = label;
+		datapacket.hasLabel = includeLabel;
+		
+		return datapacket;
 	}
 }

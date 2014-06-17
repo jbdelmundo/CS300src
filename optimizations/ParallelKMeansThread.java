@@ -1,5 +1,6 @@
 package optimizations;
 
+import java.util.HashMap;
 import java.util.Random;
 
 import data.DataPacket;
@@ -27,6 +28,13 @@ public class ParallelKMeansThread extends Thread {
 	public static DataSet[] index;
 	public static int ver[];
 	
+	//querry params
+	public static DataSet searchIndex;
+	public static DataPacket source;
+	public static double epsilon;
+	public static HashMap<DataPacket,Boolean> neighbors;
+	public static double core_dist = 0;
+	public static double neighborcount = 0;
 	
 
 	public int startIndex;
@@ -59,6 +67,13 @@ public class ParallelKMeansThread extends Thread {
 		ParallelKMeansThread.centroids = centroids;
 		ParallelKMeansThread.index = index;
 	}
+	
+	public static void setQueryParameters(DataSet searchIndex,DataPacket source,double epsilon, HashMap<DataPacket,Boolean> neighbors){
+		ParallelKMeansThread.searchIndex = searchIndex;
+		ParallelKMeansThread.source = source;
+		ParallelKMeansThread.epsilon = epsilon;
+		ParallelKMeansThread.neighbors = neighbors;
+	}
 
 
 
@@ -87,6 +102,22 @@ public class ParallelKMeansThread extends Thread {
 		this.interrupt();
 	}
 	
+	public void search(){
+		
+		for (int i = startIndex; i< endIndex; i++) {
+			DataPacket dataPacket = searchIndex.elementAt(i);
+			
+			if (source.equals(dataPacket))
+				continue;
+			double dist = ParallelKMeans.kmeansIndexdist(source, dataPacket);
+			// System.out.println("findNeighbors:" + dist);
+			if (epsilon >= dist) {
+				synchronized (monitor) {
+					neighbors.put(dataPacket,true);
+				}				
+			}
+		}
+	}
 	
 	public void index(){
 		for (int i = startIndex; i < endIndex; i++) {

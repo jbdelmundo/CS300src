@@ -3,9 +3,12 @@ package controller;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 import optimizations.DistanceCache;
+import optimizations.KMeansLSHResult;
+import optimizations.ParallelKMeans;
 
 import clustering.NearestNeighborCompute;
 import clustering.OPTICSAlgorithm;
@@ -33,57 +36,128 @@ public class IDS {
 	long timeSolo; //1606 milis
 	public static DistanceCache distCache;
 	public static boolean useDistCache = false;
+	public static boolean useKLSH = true;
 	
-	public void IDS_run(boolean useParallelSearch,int trainItem, int testItem) {
+	public static KMeansLSHResult[] kmeansResults;
+	public static ParallelKMeans pkm;
+	public static int probecount = 15;
+	
+	public DataSet initTrain(String DataDirectory, int trainItems[]){
+		DataSet knowledge =  new DataSet();
+		for (int i = 0; i < trainItems.length; i++) {
+			int trainItem = trainItems[i];
+			
+			String trainFilename = "ids10000_"+trainItem+".data";
+			String InputTrainingFilePath = DataDirectory + File.separatorChar + trainFilename;
+			DataSet trainData = DataSetReader.readTrainingSet(InputTrainingFilePath);
+			
+			knowledge = DataIntegration.combine(knowledge, trainData);
+		}
+		return knowledge;
+	}
+	
+	public void IDS_run(boolean useParallelSearch,int trainItems[], int testItems[], double epsilon, int minPts) {
 
 		long startTime = System.currentTimeMillis();
 		
-		String DataDirectory = "RandomPieces_200";
-		String trainFilename = "ids200_"+trainItem+".data";
-		String testFilename = "ids200_"+testItem+".data";
-		String OpticsFilename = "ids200_" + trainItem + "-" + testItem + ".optics";
+		String DataDirectory = "RandomPieces_10000";
 		
-		
-		String InputTrainingFilePath = DataDirectory + File.separatorChar + trainFilename;
-		String InputTestFilePath = DataDirectory + File.separatorChar + testFilename;
-		String OutputFilePath = DataDirectory + File.separatorChar +  OpticsFilename;
-		
-		double epsilon = 15000; //7000 originally
-		int minPts = 200;//20;//6;
+		//build trainset
 		
 		
 		
 		
 		
 		
-		DataSet trainData = DataSetReader.readTrainingSet(InputTrainingFilePath);
-		DataSet testData = DataSetReader.readTestSet(InputTestFilePath);
 		
-		DataSet experimentData = DataIntegration.combine(trainData, testData);
+		DataSet knowledge = initTrain(DataDirectory, trainItems);
 		
-		DataSet normalizedData =  DataNormalization.normalizeIntegerScaling(experimentData);		
+		System.out.println(Arrays.toString(trainItems));
+		 
 		
-		OPTICSAlgorithm opticsalgo = new OPTICSAlgorithm();
-		DataPacketWriter opticsOutputWriter = new DataPacketWriter(OutputFilePath);
 		
-		long endRead  = System.currentTimeMillis();
 		
-		if(useDistCache){
-			trainData = null;
-			testData = null;
-			experimentData = null;
-			distCache = new DistanceCache(normalizedData);
-		}
+		//loop for multiple test items
+		for (int testItem = 0; testItem < testItems.length; testItem++) {
 			
+			
+			//load testDataFile
+			String testFilename = "ids10000_"+testItems[testItem]+".data";
+//			String OpticsFilename = "ids10000_"  + "-" + testItems[testItem] + ".optics";
+			String OpticsFilename = "test.optics";
+			String InputTestFilePath = DataDirectory + File.separatorChar + testFilename;
+			
+			
+			String OutputFilePath = DataDirectory + File.separatorChar +  OpticsFilename;
+			
+			
+			
+			DataSet testData = DataSetReader.readTestSet(InputTestFilePath);
+			DataSet experimentData = DataIntegration.combine(knowledge, testData);	
+			
+			
+			DataSet normalizedData =  DataNormalization.normalizeIntegerScaling(experimentData);		
+			OPTICSAlgorithm opticsalgo = new OPTICSAlgorithm();
+			DataPacketWriter opticsOutputWriter = new DataPacketWriter(OutputFilePath);
+			
+			long endRead  = System.currentTimeMillis();
+			
+			if(useKLSH){
+				int threadcount = 3;
+				int indexcount = 1;
+				double samplePercent = 1.0;
+				int k = 100;
+				int itr = 5;
+				int probecount = 15;
+				
+				pkm = new ParallelKMeans(threadcount);
+				System.out.println("Sampling...");
+				DataPacket samples[] = pkm.sampleDatabase(normalizedData, samplePercent);
+				
+				kmeansResults =  new KMeansLSHResult[indexcount];
+				for (int i = 0; i < indexcount; i++) {
+					System.out.println("Clustering...");
+					long startCluster = System.currentTimeMillis();
+					DataPacket centroids[] = pkm.runKMeansClusteringPhase(samples, k, itr);
+					long endCluster = System.currentTimeMillis();
+					
+					
+					System.out.println("Indexing...");
+					long startIndex = System.currentTimeMillis();		
+					DataSet indices[] = pkm.index(normalizedData, centroids, samples);		
+					long endIndex = System.currentTimeMillis();
+					
+					
+					System.out.println("ClusterTime:" + (endCluster-startCluster)/1000.0);
+					System.out.println("IndexTime:" + (endIndex-startIndex)/1000.0);
+					kmeansResults[i] = new KMeansLSHResult(centroids, indices, probecount);
+				}
+				
+				
+			}// end if
+						
+			
+			
+			opticsalgo.OPTICS(normalizedData, epsilon, minPts, opticsOutputWriter);
+			
+			
+			//read OpticsFile
+			
+			//Calculate predictions
+			
+			//Measure Entropy
+			
+			
+			//merge confident data to knowledge
+			
+			
+		}//loop for the next testItem
 		
-		long endcache  = System.currentTimeMillis();
+		
 		/**
-		 * use jocl.org
+		 * Future Improvements: JOCL
 		 */
-		NearestNeighborCompute.useParallelSearch = useParallelSearch;
 		
-		
-		opticsalgo.OPTICS(normalizedData, epsilon, minPts, opticsOutputWriter);
 		
 		
 		
@@ -92,9 +166,6 @@ public class IDS {
 		
 		long totalTime = endTime - startTime;
 		System.out.println("Start Time: " + startTime);
-		System.out.println("End Time: " + endTime);
-		System.out.println("Cache Runtime: " +( endcache-endRead));
-		System.out.println("OPTICS Runtime: " +( endTime- endcache));
 		System.out.println("Total Runtime: " + totalTime);
 		
 		if(useParallelSearch){
@@ -114,19 +185,22 @@ public class IDS {
 		//1760539 - Initializes Heap Capacity
 		//1135444 computes core dist with neighborsearch, adds only unprocessed neighbors, adds precomputed distNeighbor: 10 mins better
 		//1137281 - 7000 to 15k epsilon
-		//1142693minpts from 50 to 200
+		//1142693 minpts from 50 to 200
+		//483291 KLSH
+		
+		//2% data: 1$ train, 1%test
 	}
 	
 	public static void main(String[] args) {
 		IDS ids = new IDS();
-//		ids.IDS_run(false);
+//		
+		double epsilon = 5000; //7000 originally
+		int minPts = 10;//20;//6;
 		
+		int testitems[] = {100};//{5,20,30,40,50};
+		int trainitems[] = {10};
+		ids.IDS_run(true,trainitems,testitems, epsilon,minPts);
 		
-		ids.IDS_run(true,1,2);
-		
-//		for (int i = 1; i < 10; i++) {
-//			ids.IDS_run(true,i,i+1);
-//		}
 		
 		System.out.println("Time with parallel : " + ids.timeParallel);
 		System.out.println("Time solor : " + ids.timeSolo);

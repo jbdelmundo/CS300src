@@ -105,23 +105,34 @@ public class OpticsPlot extends JFrame{
 		flat.setNotify(false);
 		
 		
-		int counter = 0, start = -1, end = -1;
-		int areacount = 0;
+		int counter = 0;
+		int areaCounter = 0;
+		SteepArea currentArea = areas.get(areaCounter);
+		boolean isIn = false;		
+		
 		boolean isSteepUp = false, isFlat = false;
 		for (int i = 0; i < points.size(); i++) {
 			
 			
 			ReachabilityPoint point = points.get(i);
+			System.out.print("i:"+i + "\t" + currentArea.startIndex + " " + currentArea.endIndex);
 			
-			if(counter > end){
-				start = areas.get(areacount).startIndex;
-				end = areas.get(areacount).endIndex;
-				isSteepUp = areas.get(areacount).isSteepUp;
-				isFlat = areas.get(areacount).isFlat;
+			if(i > currentArea.endIndex){
+				areaCounter++;
+				if(areaCounter < areas.size()) currentArea = areas.get(areaCounter);
+			}
+			
+			if(i >= currentArea.startIndex && i <= currentArea.endIndex){
+				isFlat = false;
+				isSteepUp = currentArea.isSteepUp;				
+			}else{
+				isFlat = true;
 			}
 			
 			
+			System.out.println("\t" + isFlat);
 			
+			counter++;
 			double reachability = point.reachability ;
 			if(isFlat){
 				flat.add(counter, reachability);
@@ -131,7 +142,7 @@ public class OpticsPlot extends JFrame{
 				steepDown.add(counter, reachability);
 			}
 			
-			counter++;
+			
 		}
 		dataset.addSeries(flat);
 		dataset.addSeries(steepDown);
@@ -165,6 +176,7 @@ public class OpticsPlot extends JFrame{
 	}
 	
 	public void addDataByTrainTest(ArrayList<ReachabilityPoint> points){
+		int test = 0,train = 0;
 		
 		XYSeries data[] = new XYSeries[2];
 		data[0] = new XYSeries("Train");
@@ -178,9 +190,11 @@ public class OpticsPlot extends JFrame{
 			ReachabilityPoint point = points.get(i);
 			
 			if(point.hasLabel){
-				data[0].add(i,point.reachability);	
+				data[0].add(i,point.reachability);
+				train++;
 			}else{
-				data[1].add(i,point.reachability);	
+				data[1].add(i,point.reachability);
+				test++;
 			}			
 		}
 		
@@ -188,6 +202,8 @@ public class OpticsPlot extends JFrame{
 			dataset.addSeries(data[i]);
 		}
 		
+		System.out.println("------------------VERIFICATION "+"PLOT"+"---------------");
+		System.out.println("Train: " + train + "\t Test: "+ test);
 	}
 	
 	public void addDataByCategory(ArrayList<ReachabilityPoint> points){
@@ -252,7 +268,9 @@ public class OpticsPlot extends JFrame{
 	public static void main(String[] args) {
 //		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_34-125.optics";
 //		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_32-67.optics";
-		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_3-23.optics";
-		 plotGraph("OpticsPlot",path, OpticsPlot.BY_ATTACK_CATEGORY);			
+//		 String path = "RandomPieces_200" + File.separatorChar+ "ids200_10-100.optics";
+		 String path = "RandomPieces_10000" + File.separatorChar+ "test.optics";
+		 plotGraph("OpticsPlot",path, OpticsPlot.BY_ATTACK_CATEGORY);	
+//		 plotGraph("OpticsPlot",path, OpticsPlot.BY_TRAIN_VS_TEST);	
 	}
 }
