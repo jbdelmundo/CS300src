@@ -4,7 +4,7 @@ import data.HeapObject;
 
 public class SteepArea extends HeapObject{
 	public int startIndex, endIndex;
-	public double mib;
+	public double mib = 0;
 	public boolean negativeStart = false;
 	public boolean isSteepUp;
 	public boolean isFlat = false;
@@ -33,5 +33,9 @@ public class SteepArea extends HeapObject{
 	
 	public int size(){
 		return endIndex - startIndex +1;
+	}
+	
+	public void updateMIB(double update){
+		this.mib = Math.max(this.mib, update);
 	}
 }

@@ -195,10 +195,10 @@ public class IDS {
 		IDS ids = new IDS();
 //		
 		double epsilon = 5000; //7000 originally
-		int minPts = 10;//20;//6;
+		int minPts = 50;//20;//6;
 		
 		int testitems[] = {100};//{5,20,30,40,50};
-		int trainitems[] = {10};
+		int trainitems[] = {10,34,645,432,87};
 		ids.IDS_run(true,trainitems,testitems, epsilon,minPts);
 		
 		

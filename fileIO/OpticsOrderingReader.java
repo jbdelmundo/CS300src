@@ -45,7 +45,7 @@ public class OpticsOrderingReader {
 			currentpoint.label = Integer.parseInt(read[3]);
 			currentpoint.hasLabel = Boolean.parseBoolean(read[4]);
 			boolean includeLabel = true;
-			currentpoint.datapacket = OpticsOrderingReader.createPacketFromOpticsFile(5, read, includeLabel);
+			currentpoint.datapacket = OpticsOrderingReader.createPacketFromOpticsFile(5, read, includeLabel,currentpoint.label);
 			
 			buffer.add(currentpoint);
 			
@@ -60,7 +60,7 @@ public class OpticsOrderingReader {
 		return buffer;
 	}
 	
-	public static DataPacket createPacketFromOpticsFile(int startIndex, String[] line,boolean includeLabel){
+	public static DataPacket createPacketFromOpticsFile(int startIndex, String[] line,boolean includeLabel, int label){
 		int isIncluded[] = Config.getIncludedAttributes();		
 		
 		DataPacket datapacket = new DataPacket(Config.symbiolicAttributeCount, Config.continuousAttibuteCount);
@@ -83,7 +83,7 @@ public class OpticsOrderingReader {
 			sIndex++;
 		}
 		
-		int label = Integer.parseInt(line[line.length-1]);
+
 		datapacket.label = label;
 		datapacket.hasLabel = includeLabel;
 		

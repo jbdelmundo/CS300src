@@ -34,7 +34,8 @@ public class OpticsPlot extends JFrame{
 	
 	public static final int BY_ATTACK_VS_NORMAL = 1;
 	public static final int BY_ATTACK_CATEGORY = 2;
-	public static final int BY_TRAIN_VS_TEST = 3;
+	public static final int BY_PREDICTED_ATTACK_CATEGORY = 3;
+	public static final int BY_TRAIN_VS_TEST = 4;
 	
 	
 	public OpticsPlot(String title) {
@@ -76,7 +77,11 @@ public class OpticsPlot extends JFrame{
 	public void addData(ArrayList<ReachabilityPoint> points, int mode){
 		switch (mode) {
 		case BY_ATTACK_CATEGORY:
-			addDataByCategory(points);
+			addDataByCategory(points, false);
+			break;
+			
+		case BY_PREDICTED_ATTACK_CATEGORY:
+			addDataByCategory(points, true);
 			break;
 			
 		case BY_ATTACK_VS_NORMAL:
@@ -115,7 +120,7 @@ public class OpticsPlot extends JFrame{
 			
 			
 			ReachabilityPoint point = points.get(i);
-			System.out.print("i:"+i + "\t" + currentArea.startIndex + " " + currentArea.endIndex);
+//			System.out.print("i:"+i + "\t" + currentArea.startIndex + " " + currentArea.endIndex);
 			
 			if(i > currentArea.endIndex){
 				areaCounter++;
@@ -130,9 +135,9 @@ public class OpticsPlot extends JFrame{
 			}
 			
 			
-			System.out.println("\t" + isFlat);
+//			System.out.println("\t" + isFlat);
 			
-			counter++;
+			
 			double reachability = point.reachability ;
 			if(isFlat){
 				flat.add(counter, reachability);
@@ -142,7 +147,7 @@ public class OpticsPlot extends JFrame{
 				steepDown.add(counter, reachability);
 			}
 			
-			
+			counter++;
 		}
 		dataset.addSeries(flat);
 		dataset.addSeries(steepDown);
@@ -206,7 +211,7 @@ public class OpticsPlot extends JFrame{
 		System.out.println("Train: " + train + "\t Test: "+ test);
 	}
 	
-	public void addDataByCategory(ArrayList<ReachabilityPoint> points){
+	public void addDataByCategory(ArrayList<ReachabilityPoint> points, boolean usePrediction){
 		
 		XYSeries data[] = new  XYSeries[5];
 		data[0] = new XYSeries("Normal");
@@ -222,7 +227,7 @@ public class OpticsPlot extends JFrame{
 		for (int i = 0; i < points.size(); i++) {
 			ReachabilityPoint point = points.get(i);
 			
-			int label = point.label;
+			int label = ((usePrediction)? point.assignedlabel : point.label);
 			int labelCategory = DataPacket.getLabelCategory(label);			
 			
 			data[labelCategory].add(i,point.reachability);		
