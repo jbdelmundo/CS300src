@@ -53,7 +53,6 @@ public class ParallelNearestNeighbor {
 			try {
 				workers[i].join();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

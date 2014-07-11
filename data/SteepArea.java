@@ -7,6 +7,7 @@ import data.HeapObject;
 public class SteepArea extends HeapObject{
 	public int startIndex, endIndex;
 	public double mib = 0;
+	public int mibIndex = -1;
 	public boolean negativeStart = false;
 	public boolean isSteepUp;
 	public boolean isFlat = false;
@@ -44,7 +45,10 @@ public class SteepArea extends HeapObject{
 	 * Updates the MIB attribute of this steep area
 	 * @param update
 	 */
-	public void updateMIB(double update){
-		this.mib = Math.max(this.mib, update);
+	public void updateMIB(double reachability, int index){		
+		if(this.mib < reachability){
+			mibIndex = index;
+			this.mib = reachability;
+		}
 	}
 }

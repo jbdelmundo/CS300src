@@ -26,7 +26,7 @@ public class OpticsOrderingReader {
 		try {
 			scan = new Scanner(new File(pathname));			
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+	
 			e.printStackTrace();
 		}
 		
