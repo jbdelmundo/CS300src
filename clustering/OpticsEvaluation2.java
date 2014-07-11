@@ -56,7 +56,7 @@ public class OpticsEvaluation2 {
 		System.out.println("------------------------------");
 		
 		
-		ArrayList<Cluster> clusters = extractClusters(ordering, areas,reset_xi,minPts);
+		ArrayList<Cluster> clusters = extractClusters(ordering, areas,starting_xi,minPts);
 		System.out.println("Clusters Found: " +clusters.size());
 		
 		for (Cluster steepArea : clusters) {
@@ -169,7 +169,7 @@ public class OpticsEvaluation2 {
 			SteepArea steepArea = SetOfSteepDownAreas.get(i);
 			
 			if(steepArea.mib > reachability * (1-xi)){
-				System.out.print("\n\t Removed SDA: "+ steepArea.startIndex+"\t"+ steepArea.endIndex +"\tSDA mib:"+ steepArea.mib +"\t VS "+reachability +"\t at index:"+ steepArea.mibIndex);
+				System.out.print("\n\t Removed SDA: "+ steepArea.startIndex+"\t"+ steepArea.endIndex +"\tSDA mib:"+ steepArea.mib +"\t VS "+reachability +"\t at index:"+ steepArea.mibIndex + " mult "+ (1-xi));
 				SetOfSteepDownAreas.remove(i);
 				size--;
 			}
@@ -197,7 +197,7 @@ public class OpticsEvaluation2 {
 			return null;
 		
 		//find start and end areas
-		double reachStart = ((points.get(sda.endIndex).reachability < 0)? Double.MAX_VALUE  : points.get(sda.endIndex).reachability) ; 	//fix for negative values
+		double reachStart =  points.get(sda.endIndex).reachability ; 	//fix for negative values
 		double reachEnd;
 		if(sua.endIndex+1 >= points.size()){
 			reachEnd = points.get(sua.endIndex).reachability;			//what to do when there is no SUA +1?
