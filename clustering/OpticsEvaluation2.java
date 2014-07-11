@@ -64,8 +64,9 @@ public class OpticsEvaluation2 {
 		}
 		
 //		System.out.println("Areas " + areas.size());
-		OpticsPlot.plotGraphAreas("Clusters", ordering, areas);
-//		OpticsPlot.plotGraph("WEw", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
+		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
+		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
+		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
 //		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
 		
 	}
@@ -197,7 +198,7 @@ public class OpticsEvaluation2 {
 			return null;
 		
 		//find start and end areas
-		double reachStart =  points.get(sda.endIndex).reachability ; 	//fix for negative values
+		double reachStart =  points.get(sda.startIndex).reachability ; 	//fix for negative values
 		double reachEnd;
 		if(sua.endIndex+1 >= points.size()){
 			reachEnd = points.get(sua.endIndex).reachability;			//what to do when there is no SUA +1?
@@ -207,48 +208,65 @@ public class OpticsEvaluation2 {
 		
 		
 			
-		
+		//TO FIX----------- START BOUNDARIES / END BOUNDARIES WHEN NEGATIVE, ZEROES
 		
 		int startIndex = -1 ,endIndex = -1;
 		
+		if(reachStart < 0){
+			startIndex = sda.startIndex;
 			
-			if(reachStart * (1-xi) >= reachEnd ){		//case B	
-				endIndex = sua.endIndex;
-				
+			// ends with all SUAs?
+		}
+		
+		if(reachEnd < 0){
+			endIndex = sua.endIndex;
+		}
+		
+		
+		
+		
+		if(reachStart * (1-xi) >= reachEnd ){			//case B	
+			endIndex = sua.endIndex;
+			
 			//find the MAX val of r(x) , x is in SDA  st. r(x) <= reachEnd --search in SDA 
-				double maxval = Double.MIN_VALUE;
-				
-				for (int i = sda.startIndex; i <= sda.endIndex; i++) {
-					if(points.get(i).reachability > maxval && points.get(i).reachability <= reachEnd){
-						startIndex = i;
-						maxval = points.get(i).reachability;
-					}
-				}
-				
-				
+			double maxval = Double.MIN_VALUE;
 			
-			}else if(reachEnd * (1-xi) >= reachStart ){		//case C
-				startIndex = sda.startIndex;
-				
-			//find the MIN val of r(x) , x is in SUA  st. r(x) <= reachEnd reachStart --search in SUA
-				double minval = Double.MAX_VALUE;
-				
-				for (int i = sua.startIndex; i <= sua.endIndex; i++) {
-					if(points.get(i).reachability < minval && points.get(i).reachability >= reachStart){
-						endIndex = i;
-						minval = points.get(i).reachability;
-					}
-				}	
-				
-			}else{
-				startIndex = sda.startIndex;
-				endIndex = sua.endIndex;
+			for (int i = sda.startIndex; i <= sda.endIndex; i++) {
+				if(points.get(i).reachability > maxval && points.get(i).reachability <= reachEnd){
+					startIndex = i;
+					maxval = points.get(i).reachability;
+				}
 			}
+			
+			
+		
+		}else if(reachEnd * (1-xi) >= reachStart ){		//case C
+			startIndex = sda.startIndex;
+			
+			//find the MIN val of r(x) , x is in SUA  st. r(x) <= reachEnd reachStart --search in SUA
+			double minval = Double.MAX_VALUE;
+			
+			for (int i = sua.startIndex; i <= sua.endIndex; i++) {
+				if(points.get(i).reachability < minval && points.get(i).reachability >= reachStart){
+					endIndex = i;
+					minval = points.get(i).reachability;
+				}
+			}	
+			
+		}else{											//case A
+			startIndex = sda.startIndex;
+			endIndex = sua.endIndex;
+		}
 		
 		
 		//check boundaries
-		if(startIndex <0 || endIndex < 0){
-			System.out.println("No boundaries found");
+		if(startIndex <0) {
+			System.out.println("No start boundaries found");
+			return null;
+		}
+		
+		if(endIndex < 0){
+			System.out.println("No end boundaries found");
 			return null;
 		}
 		

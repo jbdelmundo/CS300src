@@ -19,6 +19,9 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RefineryUtilities;
 
+import com.sun.org.apache.bcel.internal.generic.LSTORE;
+
+import data.Cluster;
 import data.DataPacket;
 import data.ReachabilityPoint;
 import data.SteepArea;
@@ -35,7 +38,8 @@ public class OpticsPlot extends JFrame{
 	public static final int BY_ATTACK_VS_NORMAL = 1;
 	public static final int BY_ATTACK_CATEGORY = 2;
 	public static final int BY_PREDICTED_ATTACK_CATEGORY = 3;
-	public static final int BY_TRAIN_VS_TEST = 4;
+	public static final int BY_TRAIN_VS_TEST = 4;	
+	public static final int BY_CLUSTER = 5;
 	
 	
 	public OpticsPlot(String title) {
@@ -97,6 +101,54 @@ public class OpticsPlot extends JFrame{
 		}
 	}
 	
+	public void addDataByClusters(ArrayList<ReachabilityPoint> points,ArrayList<Cluster> clusters){
+		
+		XYSeries clust[] = new XYSeries[2];
+		clust[0] = new XYSeries("OddCluster");
+		clust[1] = new XYSeries("EvenCluster");
+
+		XYSeries non = new XYSeries("NonCluster");
+		
+		clust[0].setNotify(false);
+		clust[1].setNotify(false);
+		non.setNotify(false);
+		
+		int clustercounter = 0;
+		Cluster currentCluster = clusters.get(clustercounter);
+		
+		boolean outsideLast = false;
+		int lastAdd = 0;
+		
+		for (int i = 0; i < points.size(); i++) {
+			ReachabilityPoint point = points.get(i);
+			
+			if(i > currentCluster.endIndex){
+				clustercounter++;
+				if(clustercounter < clusters.size()) currentCluster = clusters.get(clustercounter);
+			}
+			
+			
+			if(i >= currentCluster.startIndex && i <= currentCluster.endIndex){
+				//inside
+				
+				clust[lastAdd%2].add(i, point.reachability);			
+				outsideLast = false;
+				
+			}else{
+				//outside
+				non.add(i, point.reachability);
+				if(!outsideLast) lastAdd++;
+				
+				outsideLast = true;
+			}
+		}
+		
+		dataset.addSeries(clust[0]);
+		dataset.addSeries(clust[1]);
+		dataset.addSeries(non);
+		
+		
+	}
 	
 	
 	public void addDataBySteepAreas(ArrayList<ReachabilityPoint> points,ArrayList<SteepArea> areas){
@@ -263,6 +315,16 @@ public class OpticsPlot extends JFrame{
 		demo.setDefaultCloseOperation(EXIT_ON_CLOSE);		
 		
 		demo.addDataBySteepAreas(points, areas);
+	}
+	
+	public static void plotGraphClusters(String title, ArrayList<ReachabilityPoint> points, ArrayList<Cluster> clusters ){
+		OpticsPlot demo = new OpticsPlot(title);
+		demo.pack();
+		RefineryUtilities.centerFrameOnScreen(demo);
+		demo.setVisible(true);
+		demo.setDefaultCloseOperation(EXIT_ON_CLOSE);		
+		
+		demo.addDataByClusters(points, clusters);
 	}
 	
 	public static void plotGraphAreas(String title, String path, ArrayList<SteepArea> areas){
