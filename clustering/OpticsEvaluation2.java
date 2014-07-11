@@ -3,6 +3,7 @@ package clustering;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.xml.ws.Endpoint;
 
@@ -53,57 +54,179 @@ public class OpticsEvaluation2 {
 		}
 		
 		
+		extractClusters(ordering, areas,starting_xi);
 		
-		System.out.println("Areas " + areas.size());
-		OpticsPlot.plotGraphAreas("Clusters", ordering, areas);
-		OpticsPlot.plotGraph("WEw", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
+//		System.out.println("Areas " + areas.size());
+//		OpticsPlot.plotGraphAreas("Clusters", ordering, areas);
+//		OpticsPlot.plotGraph("WEw", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
 //		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
 		
 	}
 	
 	/**
-	 * 
-	 * @param points
-	 * @param areas
+	 * Extract clusters 
+	 * @param points Ordering of points
+	 * @param areas Steep areas
+	 * @return Clusters formed
 	 */
-	public void extractClusters(ArrayList<ReachabilityPoint> points, ArrayList<SteepArea> areas){
+	public ArrayList<SteepArea> extractClusters(ArrayList<ReachabilityPoint> points, ArrayList<SteepArea> areas, double xi){
 		ArrayList<SteepArea> SetOfSteepDownAreas = new ArrayList<SteepArea>();
+		
 		ArrayList<SteepArea> SetOfClusters = new ArrayList<SteepArea>();
+		
+			
+		System.out.println("------------------------------");
 		
 		int index = 0;
 		double mib = 0;
 		
 		int areaCounter = 0;
 		SteepArea currentArea = areas.get(areaCounter);
+		ReachabilityPoint currenpoint;
 		
 		//if start of steepdown at index
 		while(index < points.size()){
-			mib = Math.max(mib, points.get(index).reachability);
+			currenpoint = points.get(index);
+			mib = Math.max(mib, currenpoint.reachability);
+			
+			System.out.print("i:"+index);
 			
 			//update currentarea
 			if(index > currentArea.endIndex){
 				areaCounter++;
 				if(areaCounter < areas.size()) currentArea = areas.get(areaCounter);
+				System.out.print("\tupdate");
+			}else{
+				System.out.print("\tstay");
 			}
 			
-			if(currentArea.startIndex == index && currentArea.isSteepUp == false){
+			System.out.print("\tArea : "+currentArea.startIndex+"\t" + currentArea.endIndex + "\t" + currentArea.isSteepUp );
+			
+			if(currentArea.startIndex == index && currentArea.isSteepUp == false){		//if index is start of SDA
+				
 				//update mib values
+				updateMibValuesOfSDAs(SetOfSteepDownAreas, currenpoint.reachability);				
+				//filter SDAs
+				filterSDAs(SetOfSteepDownAreas, currenpoint.reachability, xi);
+				
+				currentArea.mib = 0;
+				SetOfSteepDownAreas.add(currentArea);			
+				index = currentArea.endIndex +1;
 				
 				
-			}else if(currentArea.startIndex == index && currentArea.isSteepUp == true){
+			}else if(currentArea.startIndex == index && currentArea.isSteepUp == true){	//if index is start of SUA
+				
+				//update mib values
+				updateMibValuesOfSDAs(SetOfSteepDownAreas, currenpoint.reachability);				
+				//filter SDAs
+				filterSDAs(SetOfSteepDownAreas, currenpoint.reachability, xi);
+				index = currentArea.endIndex +1;
+				
+				//for all SDAs, check if combination with current area satisfies cluster conditions
+				
+				//if yes, compute start and end areas
+				
 				
 			}else{
 				index++;
 			}
+			
+			System.out.println();
 		}
+		
+		
+		return SetOfClusters;
 	}
 	
-	private void updateMibValues( ArrayList<SteepArea> areas, double update){
+	/**
+	 * Removes a steep down area if the mib value is greater than SD(Reach start) x 1-xi
+	 * @param SetOfSteepDownAreas
+	 * @param reachability
+	 * @param xi
+	 */
+	private void filterSDAs(ArrayList<SteepArea> SetOfSteepDownAreas,double reachability, double xi){
+		//consider negative starts of SDAs
+		int size = SetOfSteepDownAreas.size();
+		for (int i = 0; i< size ;i++) {
+			SteepArea steepArea = SetOfSteepDownAreas.get(i);
+			
+			if(steepArea.mib > reachability * (1-xi)){
+				SetOfSteepDownAreas.remove(i);
+				size--;
+			}
+		}
+		
+	}
+	
+	/**
+	 * Updates the mib value if it is greater than the current mib value
+	 * @param areas
+	 * @param update
+	 */
+	private void updateMibValuesOfSDAs( ArrayList<SteepArea> areas, double update){
 		for (SteepArea steepArea : areas) {
 			steepArea.updateMIB(update);
 		}
 	}
 	
+	
+	private SteepArea checkCombinationOfSDASUA(ArrayList<ReachabilityPoint> points, SteepArea sda,SteepArea sua,double xi, int minpts){
+		
+		//mib of SDA must be less than end of SUA x (1-xi) ------------- or SUA+1 x (1-xi)
+		double suaEnd = points.get(sua.endIndex).reachability;
+		if(sda.mib > suaEnd*(1-xi))
+			return null;
+		
+		//find start and end areas
+		double reachStart = points.get(sda.endIndex).reachability;
+		double reachEnd;
+		if(sua.endIndex+1 >= points.size())
+			reachEnd = points.get(sua.endIndex).reachability;			//what to do when there is no SUA +1?
+		else
+			reachEnd = points.get(sua.endIndex+1).reachability;
+		int startIndex,endIndex;
+		
+			
+			if(reachStart * (1-xi) >= reachEnd ){		//case1	
+				endIndex = sua.endIndex;
+				
+			//find the min val of r(x) st. r(startIndex) > reachEnd --search in SDA --I WONT FOLLOW THE RRL HERE!
+				double minval = Double.MAX_VALUE;
+				
+				for (int i = sda.startIndex; i <= sda.endIndex; i++) {
+					if(points.get(i).reachability < minval){
+						startIndex = i;
+						minval = points.get(i).reachability;
+					}
+				}
+				
+				
+			
+			}else if(reachEnd * (1-xi) >= reachStart ){		//case2
+				startIndex = sda.startIndex;
+				
+			//find the min val of r(x) st. r(endIndex) > reachStart --search in SUA
+				double minval = Double.MAX_VALUE;
+				
+				for (int i = sua.startIndex; i <= sua.endIndex; i++) {
+					if(points.get(i).reachability < minval && points.get(i).reachability < reachStart){
+						endIndex = i;
+						minval = points.get(i).reachability;
+					}
+				}	
+				
+			}else{
+				startIndex = sda.startIndex;
+				endIndex = sua.endIndex;
+			}
+		
+		
+		//check cluster size
+		
+		
+		
+		return null;
+	}
 	
 	public void assignLabels(ArrayList<ReachabilityPoint> points, ArrayList<SteepArea> areas){
 		int areaCounter = 0;
@@ -137,6 +260,17 @@ public class OpticsEvaluation2 {
 		}
 	}
 	
+	
+	/**
+	 * Searches Steepdown and steep up areas
+	 * @param points
+	 * @param start_xi
+	 * @param reset_xi
+	 * @param end_xi
+	 * @param minPts
+	 * @param nonConseqLimit
+	 * @return
+	 */
 	public ArrayList<SteepArea>  findSteepAreas(ArrayList<ReachabilityPoint> points, double start_xi, double reset_xi,
 			double end_xi, int minPts, int nonConseqLimit){
 		
@@ -268,10 +402,11 @@ public class OpticsEvaluation2 {
 	
 	private void endArea(SteepArea currentArea,int end, int minPts, ArrayList<SteepArea> areas,ArrayList<ReachabilityPoint> points){
 		currentArea.endIndex = end;
+		//System.out.print("\tending "+currentArea.startIndex+" - " + currentArea.endIndex);
 		if(currentArea.size() >= minPts){
 			areas.add(currentArea);
-		}
-		if(points.get(currentArea.startIndex).reachability <0 ){
+			
+		}else if(points.get(currentArea.startIndex).reachability <0 ){	//if starting from negative
 			areas.add(currentArea);
 		}
 	}

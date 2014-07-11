@@ -1,5 +1,7 @@
 package data;
 
+import java.util.ArrayList;
+
 import data.HeapObject;
 
 public class SteepArea extends HeapObject{
@@ -35,6 +37,13 @@ public class SteepArea extends HeapObject{
 		return endIndex - startIndex +1;
 	}
 	
+	
+	
+	
+	/**
+	 * Updates the MIB attribute of this steep area
+	 * @param update
+	 */
 	public void updateMIB(double update){
 		this.mib = Math.max(this.mib, update);
 	}
