@@ -30,6 +30,7 @@ public class OpticsEvaluation2 {
 		opticsEval.evaluate(1, 2);
 //		opticsEval.evaluate(0, 1);
 		System.out.println("Done");
+		System.out.println(Double.POSITIVE_INFINITY + " - " + Double.MAX_VALUE);
 	}
 	
 	public void evaluate(int trainItem, int testItem){
@@ -43,6 +44,7 @@ public class OpticsEvaluation2 {
 		double end_xi = 0.1; 			//higher
 		double starting_xi = 0;			//low
 		double reset_xi = 0.1;			//lower
+		double extract_xi = 0.2;
 		
 		int minPts = 3;				//minimum size of area
 		int nonConseqLimit = 3;		//keep it low
@@ -56,7 +58,7 @@ public class OpticsEvaluation2 {
 		System.out.println("------------------------------");
 		
 		
-		ArrayList<Cluster> clusters = extractClusters(ordering, areas,starting_xi,minPts);
+		ArrayList<Cluster> clusters = extractClusters(ordering, areas,extract_xi,minPts);
 		System.out.println("Clusters Found: " +clusters.size());
 		
 		for (Cluster steepArea : clusters) {
@@ -117,8 +119,8 @@ public class OpticsEvaluation2 {
 				
 				//update mib values
 				updateMibValuesOfSDAs(SetOfSteepDownAreas, currenpoint.reachability,index);				
-				//filter SDAs
-				filterSDAs(SetOfSteepDownAreas, currenpoint.reachability, xi);
+				//filter SDAs -- remove SDA if SDAmib > SDAstart x (1-xi)
+				filterSDAs(points,SetOfSteepDownAreas,  xi);
 				
 				currentArea.mib = 0;
 				SetOfSteepDownAreas.add(currentArea);			
@@ -129,23 +131,43 @@ public class OpticsEvaluation2 {
 				System.out.print("\tAt SUA Start");
 				
 				//update mib values
-				updateMibValuesOfSDAs(SetOfSteepDownAreas, currenpoint.reachability, index);				
-				//filter SDAs
-				filterSDAs(SetOfSteepDownAreas, currenpoint.reachability, xi);
+				updateMibValuesOfSDAs(SetOfSteepDownAreas, currenpoint.reachability,index);				
+				//filter SDAs -- remove SDA if SDAmib > SDAstart x (1-xi)
+				filterSDAs(points,SetOfSteepDownAreas,  xi);
+				
+				
+				
 				index = currentArea.endIndex +1;
 				
 				//for all SDAs, check if combination with current area satisfies cluster conditions
 				for (SteepArea steepDownArea : SetOfSteepDownAreas) {
 					
-					Cluster candidate = checkCombinationOfSDASUA(points, steepDownArea, currentArea, xi, minpts);
+					System.out.println("\n\tChecking SDAs  :" + steepDownArea.startIndex +"\t"+steepDownArea.endIndex  );
+					
+					double SUAEndReach; 
+					//check if SDAmib > SUAend x (1-xi)
+					if(currentArea.endIndex +1 < points.size() ){
+						SUAEndReach = points.get(currentArea.endIndex +1 ).reachability;
+					}else{
+						SUAEndReach = Double.POSITIVE_INFINITY;
+					}
+					
+					
+					if(steepDownArea.mib > SUAEndReach * (1-xi) && SUAEndReach > 0){	
+						System.out.println("SteepUpArea not compatible.");
+						continue;						
+					}
+					
+					Cluster candidate = findStartandEndPoints(points, steepDownArea, currentArea, xi, minpts);
 					if(candidate != null){
 						SetOfClusters.add(candidate);
 					}
-					System.out.println("\n\tChecking SDAs  :" + steepDownArea.startIndex +"\t"+steepDownArea.endIndex + "\tStatus:" + (candidate!= null) );
-				}			
-				
-				
-				
+					
+					
+					
+					
+					
+				}//end of search in SDAs	
 			}else{
 				index++;
 			}
@@ -157,26 +179,37 @@ public class OpticsEvaluation2 {
 		return SetOfClusters;
 	}
 	
+	
+	// TODO fix for SDA, SUA
 	/**
 	 * Removes a steep down area if the mib value is greater than SD(Reach start) x 1-xi
 	 * @param SetOfSteepDownAreas
 	 * @param reachability
 	 * @param xi
 	 */
-	private void filterSDAs(ArrayList<SteepArea> SetOfSteepDownAreas,double reachability, double xi){
+	private void filterSDAs(ArrayList<ReachabilityPoint> points, ArrayList<SteepArea> SetOfSteepDownAreas, double xi){
 		//consider negative starts of SDAs
 		int size = SetOfSteepDownAreas.size();
 		for (int i = 0; i< size ;i++) {
 			SteepArea steepArea = SetOfSteepDownAreas.get(i);
+			ReachabilityPoint SDAStart = points.get(steepArea.startIndex);
 			
-			if(steepArea.mib > reachability * (1-xi)){
-				System.out.print("\n\t Removed SDA: "+ steepArea.startIndex+"\t"+ steepArea.endIndex +"\tSDA mib:"+ steepArea.mib +"\t VS "+reachability +"\t at index:"+ steepArea.mibIndex + " mult "+ (1-xi));
+			if(steepArea.mib > SDAStart.reachability * (1-xi) && SDAStart.reachability > 0){
+				System.out.print("\n\t Removed SDA: "+ steepArea.startIndex+"\t"+ steepArea.endIndex +"\tSDA mib:"+ steepArea.mib +"\t VS "+SDAStart.reachability +"\t at mibindex:"+ steepArea.mibIndex + " mult "+ (1-xi));
+				SetOfSteepDownAreas.remove(i);
+				size--;
+			}else if(steepArea.mib == Double.POSITIVE_INFINITY){
+				System.out.print("\n\t Removed SDA: "+ steepArea.startIndex+"\t"+ steepArea.endIndex +"\tSDA mib:"+ steepArea.mib +"\t VS "+SDAStart.reachability +"\t at mibindex:"+ steepArea.mibIndex + " mult "+ (1-xi));
 				SetOfSteepDownAreas.remove(i);
 				size--;
 			}
+			
+			
 		}
 		
 	}
+		
+	
 	
 	/**
 	 * Updates the mib value if it is greater than the current mib value
@@ -185,17 +218,18 @@ public class OpticsEvaluation2 {
 	 */
 	private void updateMibValuesOfSDAs( ArrayList<SteepArea> areas, double reachability, int index){
 		for (SteepArea steepArea : areas) {
+			if(reachability < 0 ){
+				reachability = Double.POSITIVE_INFINITY;			//update to positive infinity if negative
+			}	
+			
 			steepArea.updateMIB(reachability,index);
 		}
 	}
 	
 	
-	private Cluster checkCombinationOfSDASUA(ArrayList<ReachabilityPoint> points, SteepArea sda,SteepArea sua,double xi, int minpts){
+	private Cluster findStartandEndPoints(ArrayList<ReachabilityPoint> points, SteepArea sda,SteepArea sua,double xi, int minpts){
 		
-		//mib of SDA must be less than end of SUA x (1-xi) ------------- or SUA+1 x (1-xi)
-		double suaEnd = points.get(sua.endIndex).reachability;
-		if(sda.mib > suaEnd*(1-xi))
-			return null;
+
 		
 		//find start and end areas
 		double reachStart =  points.get(sda.startIndex).reachability ; 	//fix for negative values
@@ -207,25 +241,12 @@ public class OpticsEvaluation2 {
 			reachEnd =  ((points.get(sua.endIndex + 1).reachability < 0)? Double.MAX_VALUE  : points.get(sua.endIndex +1).reachability) ; 	//fix for negative values
 		
 		
-			
-		//TO FIX----------- START BOUNDARIES / END BOUNDARIES WHEN NEGATIVE, ZEROES
 		
 		int startIndex = -1 ,endIndex = -1;
 		
-		if(reachStart < 0){
-			startIndex = sda.startIndex;
-			
-			// ends with all SUAs?
-		}
 		
-		if(reachEnd < 0){
-			endIndex = sua.endIndex;
-		}
-		
-		
-		
-		
-		if(reachStart * (1-xi) >= reachEnd ){			//case B	
+		if(reachStart * (1-xi) >= reachEnd ){			//case B
+			System.out.println("\tCase B");
 			endIndex = sua.endIndex;
 			
 			//find the MAX val of r(x) , x is in SDA  st. r(x) <= reachEnd --search in SDA 
@@ -242,7 +263,7 @@ public class OpticsEvaluation2 {
 		
 		}else if(reachEnd * (1-xi) >= reachStart ){		//case C
 			startIndex = sda.startIndex;
-			
+			System.out.println("\tCase C");
 			//find the MIN val of r(x) , x is in SUA  st. r(x) <= reachEnd reachStart --search in SUA
 			double minval = Double.MAX_VALUE;
 			
@@ -254,19 +275,37 @@ public class OpticsEvaluation2 {
 			}	
 			
 		}else{											//case A
+			System.out.println("\tCase A");
 			startIndex = sda.startIndex;
 			endIndex = sua.endIndex;
 		}
 		
+		//SPECIAL CASES----------- START BOUNDARIES / END BOUNDARIES WHEN NEGATIVE, ZEROES
+
+		if(reachStart < 0 && reachEnd > 0){
+			startIndex = sda.startIndex;
+			endIndex = sua.endIndex;
+			// ends with all SUAs? -except with inf(-1) mib value
+		}
+		
+		if(reachEnd < 0 && reachStart > 0){
+			endIndex = sua.endIndex;
+			startIndex = sda.startIndex;
+		}
+		
+		
+		
+		
+		
 		
 		//check boundaries
 		if(startIndex <0) {
-			System.out.println("No start boundaries found");
+			System.out.println("\tNo start boundaries found");
 			return null;
 		}
 		
 		if(endIndex < 0){
-			System.out.println("No end boundaries found");
+			System.out.println("\tNo end boundaries found");
 			return null;
 		}
 		
@@ -276,6 +315,7 @@ public class OpticsEvaluation2 {
 			return null;
 		}
 		
+		System.out.println("\tAdding cluster " + startIndex +" to " + endIndex);
 		return new Cluster(startIndex, endIndex);
 	}
 	

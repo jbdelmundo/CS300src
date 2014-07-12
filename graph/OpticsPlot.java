@@ -113,34 +113,53 @@ public class OpticsPlot extends JFrame{
 		clust[1].setNotify(false);
 		non.setNotify(false);
 		
-		int clustercounter = 0;
-		Cluster currentCluster = clusters.get(clustercounter);
-		
-		boolean outsideLast = false;
-		int lastAdd = 0;
+//		int clustercounter = 0;
+//		Cluster currentCluster = clusters.get(clustercounter);
+//		
+//		boolean outsideLast = false;
+//		int lastAdd = 0;
 		
 		for (int i = 0; i < points.size(); i++) {
 			ReachabilityPoint point = points.get(i);
 			
-			if(i > currentCluster.endIndex){
-				clustercounter++;
-				if(clustercounter < clusters.size()) currentCluster = clusters.get(clustercounter);
+//			if(i > currentCluster.endIndex){
+//				clustercounter++;
+//				if(clustercounter < clusters.size()) currentCluster = clusters.get(clustercounter);
+//			}
+			
+			
+			
+			boolean inside = false;
+			
+			for (Cluster currentCluster : clusters) {
+				
+				if(i >= currentCluster.startIndex && i <= currentCluster.endIndex){
+					//inside
+					inside = true;
+					break;
+				}
 			}
 			
-			
-			if(i >= currentCluster.startIndex && i <= currentCluster.endIndex){
-				//inside
-				
-				clust[lastAdd%2].add(i, point.reachability);			
-				outsideLast = false;
-				
+			if(inside){
+				clust[0].add(i,point.reachability);
 			}else{
-				//outside
-				non.add(i, point.reachability);
-				if(!outsideLast) lastAdd++;
-				
-				outsideLast = true;
+				non.add(i,point.reachability);
 			}
+			
+			
+//			if(i >= currentCluster.startIndex && i <= currentCluster.endIndex){
+//				//inside
+//				
+//				clust[lastAdd%2].add(i, point.reachability);			
+//				outsideLast = false;
+//				
+//			}else{
+//				//outside
+//				non.add(i, point.reachability);
+//				if(!outsideLast) lastAdd++;
+//				
+//				outsideLast = true;
+//			}
 		}
 		
 		dataset.addSeries(clust[0]);
