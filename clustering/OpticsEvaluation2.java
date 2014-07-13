@@ -61,14 +61,12 @@ public class OpticsEvaluation2 {
 		ArrayList<Cluster> clusters = extractClusters(ordering, areas,extract_xi,minPts);
 		System.out.println("Clusters Found: " +clusters.size());
 		
-		for (Cluster steepArea : clusters) {
-			System.out.println("Cluster:" + steepArea.startIndex +"  " + steepArea.endIndex + "\tSize:" + (steepArea.endIndex - steepArea.startIndex +1) );
-		}
+		ClusterLabeling.assignLabels(ordering, clusters);
 		
 //		System.out.println("Areas " + areas.size());
 		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
 		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
-		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
+//		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
 //		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
 		
 	}
@@ -180,7 +178,6 @@ public class OpticsEvaluation2 {
 	}
 	
 	
-	// TODO fix for SDA, SUA
 	/**
 	 * Removes a steep down area if the mib value is greater than SD(Reach start) x 1-xi
 	 * @param SetOfSteepDownAreas

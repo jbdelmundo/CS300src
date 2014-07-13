@@ -197,8 +197,8 @@ public class IDS {
 		double epsilon = 5000; //7000 originally
 		int minPts = 50;//20;//6;
 		
-		int testitems[] = {100};//{5,20,30,40,50};
-		int trainitems[] = {10,34,645,432,87};
+		int testitems[] = {100,123,453,125,637,23,543,23};
+		int trainitems[] = {10,34,645};//,432,87};
 		ids.IDS_run(true,trainitems,testitems, epsilon,minPts);
 		
 		
