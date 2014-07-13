@@ -48,6 +48,7 @@ public class OpticsEvaluation2 {
 		
 		int minPts = 3;				//minimum size of area
 		int nonConseqLimit = 3;		//keep it low
+		boolean skipguessing = false;
 		
 		
 		ArrayList<SteepArea> areas =  findSteepAreas(ordering, starting_xi, reset_xi, end_xi, minPts,nonConseqLimit);
@@ -61,12 +62,12 @@ public class OpticsEvaluation2 {
 		ArrayList<Cluster> clusters = extractClusters(ordering, areas,extract_xi,minPts);
 		System.out.println("Clusters Found: " +clusters.size());
 		
-		ClusterLabeling.assignLabels(ordering, clusters);
+		ClusterLabeling.assignLabels(ordering, clusters,skipguessing);
 		
 //		System.out.println("Areas " + areas.size());
 		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
 		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
-//		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
+		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
 //		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
 		
 	}

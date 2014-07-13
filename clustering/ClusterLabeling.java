@@ -16,7 +16,7 @@ public class ClusterLabeling {
 	 * @param points
 	 * @param clusters
 	 */
-	public static void assignLabels(ArrayList<ReachabilityPoint> points,ArrayList<Cluster> clusters){
+	public static void assignLabels(ArrayList<ReachabilityPoint> points,ArrayList<Cluster> clusters, boolean skipGuessing){
 		
 		//sort clusters according to size, 
 		PriorityQueue<Cluster> PQclusters = new PriorityQueue<>(clusters.size());
@@ -75,7 +75,7 @@ public class ClusterLabeling {
 		int traindata = 0;
 		int guesses = 0;
 		int skippguess = 0;
-		boolean skipGuessing = true;
+		
 				
 		// guess for remaining noise -- TEST DATA NOT ON A CLUSTER
 		// TODO Find other alternatives other than left to right
@@ -111,7 +111,7 @@ public class ClusterLabeling {
 			}
 			
 			
-			
+			System.out.println("Guessing " + i + "\t" + rp.assignedlabel);
 			if(rp.assignedlabel == UNDEFINED){
 				System.out.println("Still Guessing " + i + "\t" + rp.assignedlabel);
 				System.out.println("\tPredecessor" + i + "\t" + rp_predecessor_neighbor.assignedlabel + " "+rp_predecessor_neighbor.hasLabel  );
@@ -147,6 +147,7 @@ public class ClusterLabeling {
 		
 		int assigned = correct+incorrect;
 		int testdata = points.size() - traindata;
+		int certain = correct+incorrect - guesses;
 		
 		System.out.println("Stats:");
 		System.out.println("TrainData " + traindata);
@@ -155,6 +156,7 @@ public class ClusterLabeling {
 		System.out.println();
 		System.out.println("Correct " + correct  + "\tout of "+ testdata + "\t" + (correct*1.0/testdata));
 		System.out.println("InCorrect " + incorrect  + "\tout of "+ testdata + "\t" + (incorrect*1.0/testdata));
+		System.out.println("Certain " + certain  + "\tout of "+ testdata + "\t" + (certain*1.0/testdata));
 		System.out.println();
 		System.out.println("Assigned " + assigned  + "\tout of "+ testdata + "\t" + (assigned*1.0/testdata));
 		System.out.println("Unassigned " + unassigned  + "\tout of "+ testdata + "\t" + (unassigned*1.0/testdata));
