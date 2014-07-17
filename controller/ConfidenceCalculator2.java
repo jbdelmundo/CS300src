@@ -5,17 +5,15 @@ import java.util.ArrayList;
 
 import data.Cluster;
 import data.DataPacket;
-import data.DataSet;
 import data.ReachabilityPoint;
 
 /**
- * APPROACH 1:  Get the relative entropy of the test point with all the training points, then get the average.	 
  * Input: training data and test data with assigned labels
  * Output: test points to be included.
  * @author Doge
  *
  */
-public class ConfidenceCalculator {
+public class ConfidenceCalculator2 {
 	
 	ArrayList<ReachabilityPoint> points;
 	ArrayList<ReachabilityPoint> train_points;
@@ -28,7 +26,7 @@ public class ConfidenceCalculator {
 	// TODO If point is just a guess, NEVER INCLUDE
 	// TODO if a point is not in a cluster, how to compute for entropy?
 
-	public void setDataPointsAndClusters(ArrayList<ReachabilityPoint> points , ArrayList<Cluster> clusters){
+	public void setTrainAndTestPoints(ArrayList<ReachabilityPoint> points){
 		this.points = points;
 		train_points = new ArrayList<ReachabilityPoint>();
 		test_points = new ArrayList<ReachabilityPoint>();
@@ -39,38 +37,19 @@ public class ConfidenceCalculator {
 				test_points.add(reachabilityPoint);
 			}
 		}
+	}
+	
+	public void setClusters(ArrayList<Cluster> clusters){
 		this.clusters = clusters;
 	}
 	
 	/**
-	 * 
-	 * @return Confident dataset
-	 */
-	public DataSet retriveConfidentData(double threshold){
-		DataSet confidentData = new DataSet();		
-		
-		for (ReachabilityPoint reachabilityPoint : test_points) {
-			DataPacket datapoint = reachabilityPoint.datapacket;			
-			
-			double confidence  = getRelativeEntropyInTrainingPoints(reachabilityPoint);
-			if(confidence >= threshold){
-				confidentData.add(datapoint);
-			}			
-		}
-		return confidentData;	
-	}
-	
-
-	
-	/**
-	 * Get entropy relative with whom?
-	 * @param testPoint
-	 * @return
+	 * APPROACH 1:  Get the relative entropy of the test point with all the training points, then get the average.
 	 */
 	public double getRelativeEntropyInTrainingPoints(ReachabilityPoint testPoint){
 		
 		double totalEntropy = 0;		
-		for (int i = 0; i < points.size(); i++) {		// for all points? inter-cluster? inter-label?s
+		for (int i = 0; i < points.size(); i++) {
 			ReachabilityPoint rp  = points.get(i);
 			totalEntropy += computeRelativeEntropy(testPoint, rp);
 		}
@@ -100,6 +79,43 @@ public class ConfidenceCalculator {
 	
 	
 	
-
+	/**
+	 * APPROACH 2:  Get the entropy of the point wrt clusters, assigned label
+	 */
+	public double getEntropyInCluster(ReachabilityPoint testpoint, Cluster clusterAssigned){
+		int numberOfClusters = clusters.size();
+		double entropy = 0;
+		
+		for (int i = 0; i < numberOfClusters +1; i++) {
+			double prob = getProbabilityOfPointInCluster(testpoint,clusterAssigned);
+			entropy += (prob * Math.log(prob));
+		}
+		return entropy;
+	}
+	
+	/**
+	 * Computes the probability of point in the cluster
+	 * @param testpoint
+	 * @param clusterAssigned
+	 * @return
+	 */
+	public double getProbabilityOfPointInCluster(ReachabilityPoint testpoint, Cluster clusterAssigned){
+		// options: nearest neighbor with the same label?
+		int startIndex = clusterAssigned.startIndex;
+		int endIndex =  clusterAssigned.endIndex;
+		double probability =0;
+		
+		for (int i = startIndex; i <= endIndex; i++) {
+			ReachabilityPoint rp  = points.get(i);
+			if(rp.equals(testpoint))
+				continue;
+			
+			
+			
+			
+		}
+		
+		return 0;
+	}
 	
 }

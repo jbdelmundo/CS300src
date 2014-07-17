@@ -194,7 +194,7 @@ public class IDS {
 	public static void main(String[] args) {
 		IDS ids = new IDS();
 //		
-		double epsilon = 7000; //7000 originally
+		double epsilon = Double.MAX_VALUE; //7000 originally
 		int minPts = 50;//20;//6;
 		
 		int testitems[] = {100,123,453,125,637,23,543,23};

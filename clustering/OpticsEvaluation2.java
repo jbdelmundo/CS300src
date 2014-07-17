@@ -8,7 +8,6 @@ import java.util.Iterator;
 import javax.xml.ws.Endpoint;
 
 import controller.ClusterLabeling;
-import controller.ConfidenceCalculator;
 
 import data.Cluster;
 import data.MinHeap;
@@ -51,7 +50,7 @@ public class OpticsEvaluation2 {
 		
 		int minPts = 3;				//minimum size of area
 		int nonConseqLimit = 3;		//keep it low
-		boolean skipguessing = false;
+		boolean skipguessing = true;
 		
 		
 		ArrayList<SteepArea> areas =  findSteepAreas(ordering, starting_xi, reset_xi, end_xi, minPts,nonConseqLimit);
@@ -71,8 +70,8 @@ public class OpticsEvaluation2 {
 		
 //		System.out.println("Areas " + areas.size());
 //		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
-//		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
-//		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
+		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
+		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
 //		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
 		
 	}

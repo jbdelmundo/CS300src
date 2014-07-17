@@ -69,8 +69,7 @@ public class ClusterLabeling {
 		
 		//get stats
 		
-		int correct = 0;
-		int incorrect = 0;
+		
 		int unassigned = 0;
 		int traindata = 0;
 		int guesses = 0;
@@ -124,6 +123,11 @@ public class ClusterLabeling {
 		}//end of guessing
 		
 		
+		//get measurement performance
+		int falsenegative = 0;		//actual : attack, classification: normal
+		int falsepositive = 0;		//actual : normal, classification: attack
+		int correct = 0;
+		int incorrect = 0;
 		
 		
 		for (int i = 0; i < points.size(); i++) {
@@ -137,10 +141,25 @@ public class ClusterLabeling {
 			if(rp.assignedlabel == UNDEFINED){
 				unassigned++;
 //				System.out.println("Unassigned? " + i + "\t" + rp.assignedlabel + "\t"+ rp.hasLabel);
-			}else if(rp.verifyAssignedLabel()){
-				correct++;
-			}else{
-				incorrect++;
+			}else {
+				int label = rp.label;
+				int classification = rp.assignedlabel;
+				
+				if(label == 0 && classification == 0){				//true positive
+					correct++;
+				}else if(label != 0 && classification != 0){		// true negative
+					correct++;
+				}else if(label != 0 && classification == 0){		//false negative
+					falsenegative++;
+					incorrect++;
+					System.out.println("False - "+i);
+				}else if(label == 0 && classification != 0){		//false positive
+					falsepositive++;
+					incorrect++;
+					System.out.println("False + "+i);
+				}
+				
+				
 			}
 			
 		}
@@ -156,6 +175,8 @@ public class ClusterLabeling {
 		System.out.println();
 		System.out.println("Correct " + correct  + "\tout of "+ testdata + "\t" + (correct*1.0/testdata));
 		System.out.println("InCorrect " + incorrect  + "\tout of "+ testdata + "\t" + (incorrect*1.0/testdata));
+		System.out.println("\tFalse positive " + falsenegative  + "\tout of "+ testdata + "\t" + (falsenegative*1.0/testdata));
+		System.out.println("\tFalse negative " + falsepositive  + "\tout of "+ testdata + "\t" + (falsepositive*1.0/testdata));
 		System.out.println("Certain " + certain  + "\tout of "+ testdata + "\t" + (certain*1.0/testdata));
 		System.out.println();
 		System.out.println("Assigned " + assigned  + "\tout of "+ testdata + "\t" + (assigned*1.0/testdata));

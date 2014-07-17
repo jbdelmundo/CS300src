@@ -29,7 +29,7 @@ public class ReachabilityPoint extends HeapObject{
 			return true;
 		}
 		
-		// TODO change to static 
+		 
 		if(useBooleanVerification){	//if
 			if (this.assignedlabel == datapacket.label && datapacket.label == 0)	//both normal
 			{

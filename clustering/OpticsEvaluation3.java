@@ -182,7 +182,7 @@ public class OpticsEvaluation3 {
 	}
 	
 	
-	// TODO fix for SDA, SUA
+
 	/**
 	 * Removes a steep down area if the mib value is greater than SD(Reach start) x 1-xi
 	 * @param SetOfSteepDownAreas
