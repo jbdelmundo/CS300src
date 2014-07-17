@@ -67,7 +67,7 @@ public class OpticsEvaluation2 {
 		
 		ClusterLabeling.assignLabels(ordering, clusters,skipguessing);
 		
-		ConfidenceCalculator.computeConfidence(ordering);
+		
 		
 //		System.out.println("Areas " + areas.size());
 //		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
