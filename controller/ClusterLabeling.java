@@ -1,4 +1,4 @@
-package clustering;
+package controller;
 
 import java.util.ArrayList;
 import java.util.PriorityQueue;
@@ -109,7 +109,7 @@ public class ClusterLabeling {
 			}else{
 				rp.assignedlabel = rp_successor_neighbor.getDataPacketLabel();
 			}
-			
+			rp.isAssignedGuess = true;
 			
 			System.out.println("Guessing " + i + "\t" + rp.assignedlabel);
 			if(rp.assignedlabel == UNDEFINED){

@@ -7,6 +7,9 @@ import java.util.Iterator;
 
 import javax.xml.ws.Endpoint;
 
+import controller.ClusterLabeling;
+import controller.ConfidenceCalculator;
+
 import data.Cluster;
 import data.MinHeap;
 import data.ReachabilityPoint;
@@ -64,10 +67,12 @@ public class OpticsEvaluation2 {
 		
 		ClusterLabeling.assignLabels(ordering, clusters,skipguessing);
 		
+		ConfidenceCalculator.computeConfidence(ordering);
+		
 //		System.out.println("Areas " + areas.size());
-		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
-		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
-		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
+//		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
+//		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
+//		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
 //		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
 		
 	}

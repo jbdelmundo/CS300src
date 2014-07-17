@@ -9,6 +9,7 @@ public class ReachabilityPoint extends HeapObject{
 	public int label;
 	public boolean hasLabel;
 	public int assignedlabel = UNDEFINED;
+	public boolean isAssignedGuess = false;
 	public DataPacket datapacket;
 	
 	public static final int UNDEFINED = -1;
