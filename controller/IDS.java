@@ -42,12 +42,17 @@ public class IDS {
 	public static ParallelKMeans pkm;
 	public static int probecount = 15;
 	
+	public static int DataSize = 0;
+	
+	
 	public DataSet initTrain(String DataDirectory, int trainItems[]){
+		
+		String FileNamePrefix = "ids"+DataSize+"_";
 		DataSet knowledge =  new DataSet();
 		for (int i = 0; i < trainItems.length; i++) {
 			int trainItem = trainItems[i];
 			
-			String trainFilename = "ids10000_"+trainItem+".data";
+			String trainFilename = FileNamePrefix+trainItem+".data";
 			String InputTrainingFilePath = DataDirectory + File.separatorChar + trainFilename;
 			DataSet trainData = DataSetReader.readTrainingSet(InputTrainingFilePath);
 			
@@ -57,16 +62,18 @@ public class IDS {
 	}
 	
 	public void IDS_run(boolean useParallelSearch,int trainItems[], int testItems[], double epsilon, int minPts) {
-
+		String DataDirectory = "RandomPieces_"+DataSize;
+		String FileNamePrefix = "ids"+DataSize+"_";
+		
 		long startTime = System.currentTimeMillis();
 		
-		String DataDirectory = "RandomPieces_10000";
+		
 		
 		//build trainset
 		
 		
 		
-		
+		System.out.println(DataSize);
 		
 		
 		
@@ -82,7 +89,7 @@ public class IDS {
 			
 			
 			//load testDataFile
-			String testFilename = "ids10000_"+testItems[testItem]+".data";
+			String testFilename = FileNamePrefix+testItems[testItem]+".data";
 //			String OpticsFilename = "ids10000_"  + "-" + testItems[testItem] + ".optics";
 			String OpticsFilename = "test.optics";
 			String InputTestFilePath = DataDirectory + File.separatorChar + testFilename;
@@ -137,7 +144,7 @@ public class IDS {
 			}// end if
 						
 			
-			
+			System.out.println("Starting OPTICS clustering...");
 			opticsalgo.OPTICS(normalizedData, epsilon, minPts, opticsOutputWriter);
 			
 			
@@ -150,6 +157,9 @@ public class IDS {
 			
 			//merge confident data to knowledge
 			
+			
+			
+			System.out.println("Saved:" + OutputFilePath);
 			
 		}//loop for the next testItem
 		
@@ -189,6 +199,7 @@ public class IDS {
 		//483291 KLSH
 		
 		//2% data: 1$ train, 1%test
+		
 	}
 	
 	public static void main(String[] args) {
@@ -196,9 +207,10 @@ public class IDS {
 //		
 		double epsilon = Double.MAX_VALUE; //7000 originally
 		int minPts = 50;//20;//6;
+		ids.DataSize = 1000;
 		
-		int testitems[] = {100,123,453,125,637,23,543,23};
-		int trainitems[] = {10,34,645};//,432,87};
+		int testitems[] = {143};
+		int trainitems[] = {40};//,432,87};
 		ids.IDS_run(true,trainitems,testitems, epsilon,minPts);
 		
 		

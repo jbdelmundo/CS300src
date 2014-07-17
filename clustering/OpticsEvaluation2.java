@@ -3,14 +3,9 @@ package clustering;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
-
-import javax.xml.ws.Endpoint;
-
 import controller.ClusterLabeling;
 
 import data.Cluster;
-import data.MinHeap;
 import data.ReachabilityPoint;
 import data.SteepArea;
 import fileIO.OpticsOrderingReader;
@@ -21,7 +16,7 @@ public class OpticsEvaluation2 {
 	ReachabilityPoint currentpoint;					//for iterations
 	ReachabilityPoint nextPoint = null;				//for iterations
 
-	
+	static boolean debugMode = false;
 	
 		//estimate lang
 	//double xi= 0.02;			//difference threshold
@@ -32,12 +27,12 @@ public class OpticsEvaluation2 {
 		opticsEval.evaluate(1, 2);
 //		opticsEval.evaluate(0, 1);
 		System.out.println("Done");
-		System.out.println(Double.POSITIVE_INFINITY + " - " + Double.MAX_VALUE);
+		
 	}
 	
 	public void evaluate(int trainItem, int testItem){
 		
-		String DataDirectory = "RandomPieces_10000";
+		String DataDirectory = "RandomPieces_1000";
 		String opticsFilename = "test.optics";
 		
 		ArrayList<ReachabilityPoint> ordering = OpticsOrderingReader.readFile(DataDirectory + File.separatorChar+opticsFilename);
@@ -54,11 +49,11 @@ public class OpticsEvaluation2 {
 		
 		
 		ArrayList<SteepArea> areas =  findSteepAreas(ordering, starting_xi, reset_xi, end_xi, minPts,nonConseqLimit);
-		System.out.println("Areas Found: " +areas.size());
+		if(debugMode)System.out.println("Areas Found: " +areas.size());
 		
-		System.out.println("------------------------------");
-		System.out.println("EXTRACTING CLUSTERS");
-		System.out.println("------------------------------");
+		if(debugMode)System.out.println("------------------------------");
+		if(debugMode)System.out.println("EXTRACTING CLUSTERS");
+		if(debugMode)System.out.println("------------------------------");
 		
 		
 		ArrayList<Cluster> clusters = extractClusters(ordering, areas,extract_xi,minPts);
@@ -68,7 +63,7 @@ public class OpticsEvaluation2 {
 		
 		
 		
-//		System.out.println("Areas " + areas.size());
+//		if(suppressoutput)System.out.println("Areas " + areas.size());
 //		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
 		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
 		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
@@ -101,23 +96,23 @@ public class OpticsEvaluation2 {
 			currenpoint = points.get(index);
 			mib = Math.max(mib, currenpoint.reachability);
 			
-			System.out.print("i:"+index);
+			if(debugMode)System.out.print("i:"+index);
 			
 			//update currentarea
 			if(index > currentArea.endIndex){
 				areaCounter++;
 				if(areaCounter < areas.size()) currentArea = areas.get(areaCounter);
-				System.out.print("\tupdate");
+				if(debugMode)System.out.print("\tupdate");
 			}else{
-				System.out.print("\tstay");
+				if(debugMode)System.out.print("\tstay");
 			}
 			
 			String direction = (currentArea.isSteepUp? "UP" : "DOWN");
 			
-			System.out.print("\tArea : "+currentArea.startIndex+"\t" + currentArea.endIndex + "\t" + direction  );
+			if(debugMode)System.out.print("\tArea : "+currentArea.startIndex+"\t" + currentArea.endIndex + "\t" + direction  );
 			
 			if(currentArea.startIndex == index && currentArea.isSteepUp == false){		//if index is start of SDA
-				System.out.print("\tAt SDA Start");
+				if(debugMode)System.out.print("\tAt SDA Start");
 				
 				
 				//update mib values
@@ -131,7 +126,7 @@ public class OpticsEvaluation2 {
 				
 				
 			}else if(currentArea.startIndex == index && currentArea.isSteepUp == true){	//if index is start of SUA
-				System.out.print("\tAt SUA Start");
+				if(debugMode)System.out.print("\tAt SUA Start");
 				
 				//update mib values
 				updateMibValuesOfSDAs(SetOfSteepDownAreas, currenpoint.reachability,index);				
@@ -145,7 +140,7 @@ public class OpticsEvaluation2 {
 				//for all SDAs, check if combination with current area satisfies cluster conditions
 				for (SteepArea steepDownArea : SetOfSteepDownAreas) {
 					
-					System.out.println("\n\tChecking SDAs  :" + steepDownArea.startIndex +"\t"+steepDownArea.endIndex  );
+					if(debugMode)System.out.println("\n\tChecking SDAs  :" + steepDownArea.startIndex +"\t"+steepDownArea.endIndex  );
 					
 					double SUAEndReach; 
 					//check if SDAmib > SUAend x (1-xi)
@@ -157,7 +152,7 @@ public class OpticsEvaluation2 {
 					
 					
 					if(steepDownArea.mib > SUAEndReach * (1-xi) && SUAEndReach > 0){	
-						System.out.println("SteepUpArea not compatible.");
+						if(debugMode)System.out.println("SteepUpArea not compatible.");
 						continue;						
 					}
 					
@@ -175,7 +170,7 @@ public class OpticsEvaluation2 {
 				index++;
 			}
 			
-			System.out.println();
+			if(debugMode)System.out.println();
 		}
 		
 		
@@ -197,11 +192,11 @@ public class OpticsEvaluation2 {
 			ReachabilityPoint SDAStart = points.get(steepArea.startIndex);
 			
 			if(steepArea.mib > SDAStart.reachability * (1-xi) && SDAStart.reachability > 0){
-				System.out.print("\n\t Removed SDA: "+ steepArea.startIndex+"\t"+ steepArea.endIndex +"\tSDA mib:"+ steepArea.mib +"\t VS "+SDAStart.reachability +"\t at mibindex:"+ steepArea.mibIndex + " mult "+ (1-xi));
+				if(debugMode)System.out.print("\n\t Removed SDA: "+ steepArea.startIndex+"\t"+ steepArea.endIndex +"\tSDA mib:"+ steepArea.mib +"\t VS "+SDAStart.reachability +"\t at mibindex:"+ steepArea.mibIndex + " mult "+ (1-xi));
 				SetOfSteepDownAreas.remove(i);
 				size--;
 			}else if(steepArea.mib == Double.POSITIVE_INFINITY){
-				System.out.print("\n\t Removed SDA: "+ steepArea.startIndex+"\t"+ steepArea.endIndex +"\tSDA mib:"+ steepArea.mib +"\t VS "+SDAStart.reachability +"\t at mibindex:"+ steepArea.mibIndex + " mult "+ (1-xi));
+				if(debugMode)System.out.print("\n\t Removed SDA: "+ steepArea.startIndex+"\t"+ steepArea.endIndex +"\tSDA mib:"+ steepArea.mib +"\t VS "+SDAStart.reachability +"\t at mibindex:"+ steepArea.mibIndex + " mult "+ (1-xi));
 				SetOfSteepDownAreas.remove(i);
 				size--;
 			}
@@ -248,7 +243,7 @@ public class OpticsEvaluation2 {
 		
 		
 		if(reachStart * (1-xi) >= reachEnd ){			//case B
-			System.out.println("\tCase B");
+			if(debugMode)System.out.println("\tCase B");
 			endIndex = sua.endIndex;
 			
 			//find the MAX val of r(x) , x is in SDA  st. r(x) <= reachEnd --search in SDA 
@@ -265,7 +260,7 @@ public class OpticsEvaluation2 {
 		
 		}else if(reachEnd * (1-xi) >= reachStart ){		//case C
 			startIndex = sda.startIndex;
-			System.out.println("\tCase C");
+			if(debugMode)System.out.println("\tCase C");
 			//find the MIN val of r(x) , x is in SUA  st. r(x) <= reachEnd reachStart --search in SUA
 			double minval = Double.MAX_VALUE;
 			
@@ -277,7 +272,7 @@ public class OpticsEvaluation2 {
 			}	
 			
 		}else{											//case A
-			System.out.println("\tCase A");
+			if(debugMode)System.out.println("\tCase A");
 			startIndex = sda.startIndex;
 			endIndex = sua.endIndex;
 		}
@@ -302,22 +297,22 @@ public class OpticsEvaluation2 {
 		
 		//check boundaries
 		if(startIndex <0) {
-			System.out.println("\tNo start boundaries found");
+			if(debugMode)System.out.println("\tNo start boundaries found");
 			return null;
 		}
 		
 		if(endIndex < 0){
-			System.out.println("\tNo end boundaries found");
+			if(debugMode)System.out.println("\tNo end boundaries found");
 			return null;
 		}
 		
 		//check cluster size
 		if(endIndex - startIndex+1 < minpts){
-			System.out.println("Cluster not big enough. Size: " + (endIndex - startIndex+1 )  + "\tMinpts:"+minpts);
+			if(debugMode)System.out.println("Cluster not big enough. Size: " + (endIndex - startIndex+1 )  + "\tMinpts:"+minpts);
 			return null;
 		}
 		
-		System.out.println("\tAdding cluster " + startIndex +" to " + endIndex);
+		if(debugMode)System.out.println("\tAdding cluster " + startIndex +" to " + endIndex);
 		return new Cluster(startIndex, endIndex);
 	}
 	
@@ -349,21 +344,21 @@ public class OpticsEvaluation2 {
 			ReachabilityPoint currentPoint = points.get(i);
 			ReachabilityPoint nextPoint = points.get(i+1);
 			
-			System.out.print("PT:" + i );
-//			System.out.print("\t" +currentPoint.reachability +" " + nextPoint.reachability );
+			if(debugMode)System.out.print("PT:" + i );
+//			if(suppressoutput)System.out.print("\t" +currentPoint.reachability +" " + nextPoint.reachability );
 			
 			boolean nonConseqFailure = false;
 			int resetTo = i;
 			
 			if(currentArea != null){						//in steepArea
 				
-				System.out.print("\tin");
+				if(debugMode)System.out.print("\tin");
 				
 				
 				if(nextPoint.reachability < 0){
 					endArea(currentArea, i, minPts, areas,points);
 					currentArea = null;
-					System.out.print("\tEnd nega");
+					if(debugMode)System.out.print("\tEnd nega");
 				}else
 				//if in steepUP
 				if(currentArea.isSteepUp){
@@ -373,13 +368,13 @@ public class OpticsEvaluation2 {
 					if(isSteepDownPoint(currentPoint.reachability, nextPoint.reachability,end_xi)){
 						endArea(currentArea, i-1, minPts, areas,points);
 						currentArea = null;
-						System.out.print("\tEnd OPP");
+						if(debugMode)System.out.print("\tEnd OPP");
 						
 					}else if(isAsHigh(currentPoint.reachability, nextPoint.reachability)){
-						System.out.print("\tContinue");
+						if(debugMode)System.out.print("\tContinue");
 						nonConseq = 0;
 					}else if(isSteepUpPoint(currentPoint.reachability, nextPoint.reachability,reset_xi)){
-						System.out.print("\tReset");
+						if(debugMode)System.out.print("\tReset");
 						currentArea.endIndex = i;
 						nonConseq = 0;
 					}else{
@@ -390,7 +385,7 @@ public class OpticsEvaluation2 {
 							resetTo = currentArea.endIndex + 1;
 							currentArea = null;
 						}
-						System.out.print("\tNonConseq"+nonConseq);
+						if(debugMode)System.out.print("\tNonConseq"+nonConseq);
 						
 					}
 					
@@ -405,13 +400,13 @@ public class OpticsEvaluation2 {
 					if(isSteepUpPoint(currentPoint.reachability, nextPoint.reachability,end_xi)){
 						endArea(currentArea, i-1, minPts, areas,points);
 						currentArea = null;
-						System.out.print("\tEnd OPP");
+						if(debugMode)System.out.print("\tEnd OPP");
 						
 					}else if(isAsLow(currentPoint.reachability, nextPoint.reachability)){
-						System.out.print("\tContinue");
+						if(debugMode)System.out.print("\tContinue");
 						nonConseq = 0;
 					}else if(isSteepDownPoint(currentPoint.reachability, nextPoint.reachability,reset_xi)){
-						System.out.print("\tReset");
+						if(debugMode)System.out.print("\tReset");
 						currentArea.endIndex = i;
 						nonConseq = 0;
 					}else{
@@ -422,7 +417,7 @@ public class OpticsEvaluation2 {
 							resetTo = currentArea.endIndex + 1;
 							currentArea = null;
 						}
-						System.out.print("\tNonconseq"+nonConseq);
+						if(debugMode)System.out.print("\tNonconseq"+nonConseq);
 						
 					}
 				}
@@ -432,19 +427,19 @@ public class OpticsEvaluation2 {
 			
 			if(currentArea == null && !nonConseqFailure){	// not in steeparea
 				
-				System.out.print("\tout");
+				if(debugMode)System.out.print("\tout");
 								
 				if(isSteepUpPoint(currentPoint.reachability, nextPoint.reachability,start_xi) ){
 					currentArea =  new SteepArea(i,i,SteepArea.UP);			//start steepUp
 					nonConseq = 0;
-					System.out.print("\tStart UP");
+					if(debugMode)System.out.print("\tStart UP");
 					
 				} else
 				
 				if(isSteepDownPoint(currentPoint.reachability, nextPoint.reachability,start_xi)){
 					currentArea =  new SteepArea(i,i,SteepArea.DOWN);		//start steepDown
 					nonConseq = 0;
-					System.out.print("\tStart Down");
+					if(debugMode)System.out.print("\tStart Down");
 					
 				}
 				
@@ -454,8 +449,8 @@ public class OpticsEvaluation2 {
 			if(nonConseqFailure)
 				i = resetTo-1;
 			
-			System.out.print("\t end \t"+ (currentArea == null));
-			System.out.print("\n");
+			if(debugMode)System.out.print("\t end \t"+ (currentArea == null));
+			if(debugMode)System.out.print("\n");
 			
 		}
 		
@@ -464,7 +459,7 @@ public class OpticsEvaluation2 {
 	
 	private void endArea(SteepArea currentArea,int end, int minPts, ArrayList<SteepArea> areas,ArrayList<ReachabilityPoint> points){
 		currentArea.endIndex = end;
-		//System.out.print("\tending "+currentArea.startIndex+" - " + currentArea.endIndex);
+		//if(suppressoutput)System.out.print("\tending "+currentArea.startIndex+" - " + currentArea.endIndex);
 		if(currentArea.size() >= minPts){
 			areas.add(currentArea);
 			
@@ -550,19 +545,19 @@ public class OpticsEvaluation2 {
 				false_positive++;
 				
 			}
-			System.out.println("\t"+rp.label+ "\t" + rp.assignedlabel);
+			if(debugMode)System.out.println("\t"+rp.label+ "\t" + rp.assignedlabel);
 			
 			
 		}// end of all  points
 		
 		
 
-		System.out.println("True Positive: " + true_positive);
-		System.out.println("True Negative: " + true_negative);
-		System.out.println("False Positive: " + false_positive);
-		System.out.println("False Negative: " + false_negative);
-		System.out.println("Total Data: " + total_testdata);
-		System.out.println("Accuracy: " + (true_positive+true_negative)*1.0/total_testdata );
+		if(debugMode)System.out.println("True Positive: " + true_positive);
+		if(debugMode)System.out.println("True Negative: " + true_negative);
+		if(debugMode)System.out.println("False Positive: " + false_positive);
+		if(debugMode)System.out.println("False Negative: " + false_negative);
+		if(debugMode)System.out.println("Total Data: " + total_testdata);
+		if(debugMode)System.out.println("Accuracy: " + (true_positive+true_negative)*1.0/total_testdata );
 		
 	}
 }

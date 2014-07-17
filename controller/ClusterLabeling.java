@@ -15,8 +15,9 @@ public class ClusterLabeling {
 	 * Creates label assignments to those that have no assignments. This will start with smallest clusters.
 	 * @param points
 	 * @param clusters
+	 * @return accuracy
 	 */
-	public static void assignLabels(ArrayList<ReachabilityPoint> points,ArrayList<Cluster> clusters, boolean skipGuessing){
+	public static double assignLabels(ArrayList<ReachabilityPoint> points,ArrayList<Cluster> clusters, boolean skipGuessing){
 		
 		//sort clusters according to size, 
 		PriorityQueue<Cluster> PQclusters = new PriorityQueue<>(clusters.size());
@@ -28,7 +29,7 @@ public class ClusterLabeling {
 		
 		while(!PQclusters.isEmpty()){
 			Cluster c = PQclusters.poll();
-			System.out.println("Cluster + " + c.startIndex + " - " + c.endIndex + "\tSize:" + c.size());
+//			System.out.println("Cluster + " + c.startIndex + " - " + c.endIndex + "\tSize:" + c.size());
 			
 			
 			//change all labels within cluster
@@ -128,6 +129,8 @@ public class ClusterLabeling {
 		int falsepositive = 0;		//actual : normal, classification: attack
 		int correct = 0;
 		int incorrect = 0;
+		int trueattacks = 0;
+		int truenormal = 0;
 		
 		
 		for (int i = 0; i < points.size(); i++) {
@@ -146,17 +149,21 @@ public class ClusterLabeling {
 				int classification = rp.assignedlabel;
 				
 				if(label == 0 && classification == 0){				//true positive
+					truenormal++;
 					correct++;
 				}else if(label != 0 && classification != 0){		// true negative
+					trueattacks ++;
 					correct++;
 				}else if(label != 0 && classification == 0){		//false negative
+					trueattacks ++;
 					falsenegative++;
 					incorrect++;
-					System.out.println("False - "+i);
+//					System.out.println("False - "+i);
 				}else if(label == 0 && classification != 0){		//false positive
+					truenormal++;
 					falsepositive++;
 					incorrect++;
-					System.out.println("False + "+i);
+//					System.out.println("False + "+i);
 				}
 				
 				
@@ -183,6 +190,10 @@ public class ClusterLabeling {
 		System.out.println("Unassigned " + unassigned  + "\tout of "+ testdata + "\t" + (unassigned*1.0/testdata));
 		System.out.println("Guesses " + guesses  + "\tout of "+ testdata + "\t" + (guesses*1.0/testdata));
 		System.out.println("Skippedguesses " + skippguess  + "\tout of "+ testdata + "\t" + (skippguess*1.0/testdata));
+		System.out.println("True Attacks " + trueattacks  + "\tout of "+ testdata + "\t" + (trueattacks*1.0/testdata));
+		System.out.println("True Normal " + truenormal  + "\tout of "+ testdata + "\t" + (truenormal*1.0/testdata));
+		
+		
 		
 		
 		
