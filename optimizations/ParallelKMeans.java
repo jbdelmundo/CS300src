@@ -197,7 +197,7 @@ public class ParallelKMeans {
 		
 		//iterations of k means
 		for (int i = 0; i < itr; i++) {
-			System.out.println("Kmeans Iteration:"+i);
+//			System.out.println("Kmeans Iteration:"+i);
 			
 			
 			DataPacket adjustmentCentroids[] = new DataPacket[centroids.length];
@@ -210,7 +210,7 @@ public class ParallelKMeans {
 			startThreads();
 			joinThreads();
 			
-			System.out.println("End of threads");
+//			System.out.println("End of threads");
 			
 			
 //			for (int j = 0; j < samples.length; j++) {
@@ -343,7 +343,7 @@ public class ParallelKMeans {
 				
 		
 	
-		System.out.println("\n");
+//		System.out.println("\n");
 		
 		/**********************************************************/
 		
@@ -356,8 +356,8 @@ public class ParallelKMeans {
 		startThreads();
 		joinThreads();
 		
-		System.out.println("End of threads");
-		boolean showstats = true;
+//		System.out.println("End of threads");
+		boolean showstats = false;
 		if(showstats){
 			int overhead = 0;
 			int saved = 0;
@@ -372,7 +372,7 @@ public class ParallelKMeans {
 					overhead += indexsize-ideal;
 				}
 						
-//				System.out.println("Index Centroid "+i+ " member count: " + indexsize + "\t ideal:" + ideal + " " + remark );
+				System.out.println("Index Centroid "+i+ " member count: " + indexsize + "\t ideal:" + ideal + " " + remark );
 			}
 			
 			System.out.println("Centroid Indices:" + index.length + " Total Overhead " + overhead + "saved " + saved);

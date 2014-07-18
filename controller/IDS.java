@@ -80,6 +80,7 @@ public class IDS {
 			
 			
 			combination = DataIntegration.combine(combination, itemData);
+			System.gc();
 		}
 		return combination;
 	}
@@ -112,7 +113,8 @@ public class IDS {
 			DataPacketWriter opticsOutputWriter = new DataPacketWriter(OutputFilePath);
 			
 			System.gc();	// free memory for old dataset
-			
+			System.out.println("Test Data Points: " + testData.size());
+			System.out.println("Train Data Points: " + knowledge.size());
 			
 
 			
@@ -223,15 +225,17 @@ public class IDS {
 		
 		
 		int iterations = 10;		
-		int testsize  = 10;
+		int testsize  = 100;
 		
-		int trainSizeStart = 5;
-		int trainSizeEnd = 15;
+		int trainSizeStart = 10;
+		int trainSizeEnd = 150;
+		int trainSizeIncrement = 10;
+		
 		int limit = 10000;
 		
 		
 		
-		for (int trainsize = trainSizeStart; trainsize < trainSizeEnd; trainsize++) {		//loop for each trainsize
+		for (int trainsize = trainSizeStart; trainsize < trainSizeEnd; trainsize +=trainSizeIncrement) {		//loop for each trainsize
 			
 			ArrayList<ClusterPerformance> performanceList = new ArrayList<>();
 			PrintWriter pw = new PrintWriter(new File("Performance  " +  trainsize + ".txt"));
@@ -243,6 +247,7 @@ public class IDS {
 				int trainitems[] = new int[trainsize];
 				generateDataIndices(trainitems, testitems, limit);
 				
+				System.out.println("RUN #" + i);
 				System.out.println("Train DATA: " + trainitems.length + Arrays.toString(trainitems)  );
 				System.out.println("Test DATA:  " + testitems.length + Arrays.toString(testitems)  );
 				
