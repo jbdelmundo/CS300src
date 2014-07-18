@@ -1,11 +1,14 @@
 package controller;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Random;
 
 import optimizations.DistanceCache;
 import optimizations.KMeansLSHResult;
@@ -164,9 +167,9 @@ public class IDS {
 			//merge confident data to knowledge
 			
 			
-			System.out.println("TrainPoins:" +opticsOutputWriter.train);
-			System.out.println("TestPoints:" +opticsOutputWriter.test);
-			System.out.println("Saved:" + OutputFilePath);
+//			System.out.println("TrainPoins:" +opticsOutputWriter.train);
+//			System.out.println("TestPoints:" +opticsOutputWriter.test);
+//			System.out.println("Saved:" + OutputFilePath);
 			
 //		}//END LOOP
 		
@@ -175,11 +178,10 @@ public class IDS {
 		 * Future Improvements: JOCL
 		 */
 		
+		System.out.println("Train DATA: " + trainItems.length + Arrays.toString(trainItems)  );
+		System.out.println("Test DATA:  " + testItems.length + Arrays.toString(testItems)  );
 		
-		
-		System.out.println("Training Data: " + Arrays.toString(trainItems));
-		System.out.println("Testing Data: " + Arrays.toString(testItems));
-		
+			
 		
 		long endTime   = System.currentTimeMillis();		
 		long totalTime = endTime - startTime;
@@ -211,44 +213,92 @@ public class IDS {
 		
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException {
 		IDS ids = new IDS();
 //		
 		double epsilon = Double.MAX_VALUE; //7000 originally
 		int minPts = 50;//20;//6;
-		IDS.DataSize = 1000;
-		
-		ArrayList<ClusterPerformance> performanceList = new ArrayList<>();
+		IDS.DataSize = 10000;
 		
 		
 		
-		int testsize  = 1;
-		int trainsize = 1;
-		int limit = 1000;
+		int iterations = 10;		
+		int testsize  = 10;
 		
-		for (int i = 0; i < trainitems.length; i++) {
+		int trainSizeStart = 5;
+		int trainSizeEnd = 15;
+		int limit = 10000;
+		
+		
+		
+		for (int trainsize = trainSizeStart; trainsize < trainSizeEnd; trainsize++) {		//loop for each trainsize
 			
-			generateDataIndices(testsize + trainsize, limit);
+			ArrayList<ClusterPerformance> performanceList = new ArrayList<>();
+			PrintWriter pw = new PrintWriter(new File("Performance  " +  trainsize + ".txt"));
 			
-			int testitems[] = 
-			int trainitems[] = 
+			for (int i = 0; i < iterations; i++) {	//perform multiple benchmarks
+				
+				
+				int testitems[] = new int[testsize];
+				int trainitems[] = new int[trainsize];
+				generateDataIndices(trainitems, testitems, limit);
+				
+				System.out.println("Train DATA: " + trainitems.length + Arrays.toString(trainitems)  );
+				System.out.println("Test DATA:  " + testitems.length + Arrays.toString(testitems)  );
+				
+				ClusterPerformance run_result = ids.IDS_run(true,trainitems,testitems, epsilon,minPts);
+				performanceList.add(run_result);
+			}
 			
 			
-			ClusterPerformance run_result = ids.IDS_run(true,trainitems,testitems, epsilon,minPts);
-			performanceList.add(run_result);
+			ClusterPerformance.computeAverageStats(performanceList,pw);
+			pw.close();
 		}
+		
+		
+		
+		
+		
+		
 		
 	}
 	
-	public static int[]generateDataIndices( int size,int limit){
-		int data[] = new int[size];
+	
+	//pass by reference yo!!
+	public static void generateDataIndices( int train[], int test[],int limit){
+		
+		int choices[] = new int[limit];
+		for (int i = 0; i < choices.length; i++) {
+			choices[i] = i+1;
+		}
+		
+		
+		//shuffle
+		Random r = new Random(System.currentTimeMillis());
+		for (int i = 0; i < choices.length; i++) {
+			int ri = r.nextInt(choices.length);
+			
+			
+			//swao choices[ri] and choices[i]
+			int temp = choices[ri];
+			choices[ri] = choices[i];
+			choices[i] = temp;
+		}
+		
+		int ind = 0;
+		for (int i = 0; i < train.length; i++) {
+			train[i] = choices[ind];
+			ind++;
+		}
+		
+		for (int i = 0; i < test.length; i++) {
+			test[i] = choices[ind];
+			ind++;
+		}
 		
 		
 		
-		
-		
-		
-		return data;
+//		return data;
 	}
 
 }

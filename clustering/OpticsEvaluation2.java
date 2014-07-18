@@ -79,7 +79,7 @@ public class OpticsEvaluation2 {
 //		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
 //		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
 //		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
-		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
+//		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
 		
 		
 		

@@ -1,5 +1,8 @@
 package data;
 
+import java.io.PrintWriter;
+import java.util.ArrayList;
+
 public class ClusterPerformance {
 
 	
@@ -55,6 +58,74 @@ public class ClusterPerformance {
 		System.out.println("Assigned " + assigned  + "\tout of "+ testdata + "\t" + (assigned*1.0/testdata));
 		System.out.println("Unassigned " + unassigned  + "\tout of "+ testdata + "\t" + (unassigned*1.0/testdata));
 		System.out.println("Guesses " + guesses  + "\tout of "+ testdata + "\t" + (guesses*1.0/testdata));
+		
+	}
+	
+	
+	
+	public static void computeAverageStats(ArrayList<ClusterPerformance> list, PrintWriter pw){
+		
+		
+		
+		int traindata = 0;
+		int testdata = 0;
+		
+		int correct = 0;
+		int incorrect = 0;
+		
+		
+		int falsepositive = 0;
+		int falsenegative = 0;
+		
+		
+		int assigned = 0, unassigned = 0;
+		int certain = 0;
+		int guesses = 0;
+		int correctguesses = 0;
+		
+		int clustersFormed = 0;
+		
+		traindata = list.get(0).traindata;
+		testdata = list.get(0).testdata;
+		
+		double size = list.size();
+		for (int i = 0; i < list.size(); i++) {
+			
+			correct += list.get(i).correct;
+			incorrect += list.get(i).incorrect;
+			
+			falsepositive += list.get(i).falsepositive;
+			falsenegative  += list.get(i).falsenegative;
+			
+			certain += list.get(i).certain;
+			
+			assigned += list.get(i).assigned;
+			unassigned += list.get(i).unassigned;
+			
+			correctguesses += list.get(i).correctguesses;
+			clustersFormed += list.get(i).clustersFormed;
+		}
+		
+		
+		
+		
+		pw.println("=============AVERAGE STATS ======================");
+		pw.println("Stats:");
+		pw.println("TrainData " + traindata);
+		pw.println("TestData " + testdata);
+		pw.println("DataSize " + (traindata+testdata));
+		pw.println("TrainTestRatio " + ((double)traindata/testdata));
+		pw.println();
+		pw.println("Correct "  + (correct*1.0/(testdata*size)));
+		pw.println("InCorrect " +  (incorrect*1.0/(testdata*size)));
+		pw.println("\tFalse positive " + (falsenegative*1.0/(testdata*size)));
+		pw.println("\tFalse negative " + (falsepositive*1.0/(testdata*size)));
+		pw.println("Certain " + (certain*1.0/(testdata*size)));
+		pw.println();
+		pw.println("Assigned " + assigned  + "\tout of "+ testdata + "\t" + (assigned*1.0/(testdata*size)));
+		pw.println("Unassigned " + unassigned  + "\tout of "+ testdata + "\t" + (unassigned*1.0/(testdata*size)));
+		pw.println("Correct Guesses " +(correctguesses*1.0/(testdata*size)));
+		pw.println("ClustersFormed " + (clustersFormed*1.0/(testdata*size)));
 		
 	}
 }
