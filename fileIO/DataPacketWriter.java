@@ -19,7 +19,7 @@ import data.MinHeap;
  */
 public class DataPacketWriter {
 	PrintWriter pw;
-	int test = 0, train = 0;
+	public int test = 0, train = 0;
 	
 	public DataPacketWriter() {
 		
@@ -58,6 +58,12 @@ public class DataPacketWriter {
 		}
 				
 		pw.println(id+","+reachability_dist+","+core_dist+","+label +","+hasLabel+ details);
+		
+		if(hasLabel){
+			train++;
+		}else{
+			test++;
+		}
 	}
 	
 	

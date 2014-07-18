@@ -3,6 +3,7 @@ package controller;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -12,15 +13,21 @@ import optimizations.ParallelKMeans;
 
 import clustering.NearestNeighborCompute;
 import clustering.OPTICSAlgorithm;
+import clustering.OpticsEvaluation2;
 import preprocessing.DataIntegration;
 import preprocessing.DataNormalization;
+import data.ClusterPerformance;
 import data.DataPacket;
 import data.DataSet;
 import fileIO.DataPacketWriter;
 import fileIO.DataSetReader;
 
 /**
- * Dummy class to run the 
+ * Attempted Optimizations:
+ *  Distance Cache - Store distance between 2 points : Minimal improvement, Huge space requirement n^2
+ *  Parallel Search - Parallel linear search : Minimal improvement: Scales with the dataset
+ *  Precomputed core dist when finding neighbor : IMPLEMENTED
+ *  Parallel K-means Local Sensitive Hashing : IMPLEMENTED 
  * 
  * 1) DataSetReader 			- > Reads CSV file (Data file and Attributes)
  * 2) DataNormalization 		- > Accepts DataSet and Normalizes it
@@ -34,6 +41,9 @@ public class IDS {
 	
 	long timeParallel; //1540 - 1540316
 	long timeSolo; //1606 milis
+	
+	
+	/*  ==============KLSH static Variables=================*/
 	public static DistanceCache distCache;
 	public static boolean useDistCache = false;
 	public static boolean useKLSH = true;
@@ -45,69 +55,63 @@ public class IDS {
 	public static int DataSize = 0;
 	
 	
-	public DataSet initTrain(String DataDirectory, int trainItems[]){
+	
+	
+	public DataSet combineDataSets(String DataDirectory, int items[], boolean isTestItems){
 		
 		String FileNamePrefix = "ids"+DataSize+"_";
-		DataSet knowledge =  new DataSet();
-		for (int i = 0; i < trainItems.length; i++) {
-			int trainItem = trainItems[i];
+		DataSet combination =  new DataSet();
+		for (int i = 0; i < items.length; i++) {
+			int item = items[i];
 			
-			String trainFilename = FileNamePrefix+trainItem+".data";
-			String InputTrainingFilePath = DataDirectory + File.separatorChar + trainFilename;
-			DataSet trainData = DataSetReader.readTrainingSet(InputTrainingFilePath);
+			String itemFilename = FileNamePrefix+item+".data";
+			String inputPath = DataDirectory + File.separatorChar + itemFilename;
 			
-			knowledge = DataIntegration.combine(knowledge, trainData);
+			
+			DataSet itemData;
+			if(!isTestItems){
+				itemData = DataSetReader.readTrainingSet(inputPath);
+			}else{
+				itemData = DataSetReader.readTestSet(inputPath);
+			}
+			
+			
+			combination = DataIntegration.combine(combination, itemData);
 		}
-		return knowledge;
+		return combination;
 	}
 	
-	public void IDS_run(boolean useParallelSearch,int trainItems[], int testItems[], double epsilon, int minPts) {
+	
+	public ClusterPerformance IDS_run(boolean useParallelSearch,int trainItems[], int testItems[], double epsilon, int minPts) {
 		String DataDirectory = "RandomPieces_"+DataSize;
 		String FileNamePrefix = "ids"+DataSize+"_";
 		
 		long startTime = System.currentTimeMillis();
 		
 		
-		
-		//build trainset
-		
-		
-		
-		System.out.println(DataSize);
-		
-		
-		
-		DataSet knowledge = initTrain(DataDirectory, trainItems);
-		
-		System.out.println(Arrays.toString(trainItems));
-		 
+		DataSet knowledge = combineDataSets(DataDirectory, trainItems, false);
 		
 		
 		
 		//loop for multiple test items
-		for (int testItem = 0; testItem < testItems.length; testItem++) {
-			
-			
-			//load testDataFile
-			String testFilename = FileNamePrefix+testItems[testItem]+".data";
-//			String OpticsFilename = "ids10000_"  + "-" + testItems[testItem] + ".optics";
-			String OpticsFilename = "test.optics";
-			String InputTestFilePath = DataDirectory + File.separatorChar + testFilename;
-			
-			
-			String OutputFilePath = DataDirectory + File.separatorChar +  OpticsFilename;
+//		for (int testItem = 0; testItem < testItems.length; testItem++) {
 			
 			
 			
-			DataSet testData = DataSetReader.readTestSet(InputTestFilePath);
-			DataSet experimentData = DataIntegration.combine(knowledge, testData);	
+			String OutputFilePath = DataDirectory + File.separatorChar +  "test.optics";
 			
 			
+			
+			DataSet testData = combineDataSets(DataDirectory, testItems, true); 			
+			DataSet experimentData = DataIntegration.combine(knowledge, testData);				
 			DataSet normalizedData =  DataNormalization.normalizeIntegerScaling(experimentData);		
 			OPTICSAlgorithm opticsalgo = new OPTICSAlgorithm();
 			DataPacketWriter opticsOutputWriter = new DataPacketWriter(OutputFilePath);
 			
-			long endRead  = System.currentTimeMillis();
+			System.gc();	// free memory for old dataset
+			
+			
+
 			
 			if(useKLSH){
 				int threadcount = 3;
@@ -123,7 +127,7 @@ public class IDS {
 				
 				kmeansResults =  new KMeansLSHResult[indexcount];
 				for (int i = 0; i < indexcount; i++) {
-					System.out.println("Clustering...");
+					System.out.println("Clustering K-Means...");
 					long startCluster = System.currentTimeMillis();
 					DataPacket centroids[] = pkm.runKMeansClusteringPhase(samples, k, itr);
 					long endCluster = System.currentTimeMillis();
@@ -144,13 +148,15 @@ public class IDS {
 			}// end if
 						
 			
+			
 			System.out.println("Starting OPTICS clustering...");
 			opticsalgo.OPTICS(normalizedData, epsilon, minPts, opticsOutputWriter);
 			
 			
-			//read OpticsFile
+			/***********************EVALUATE*************************************/
 			
-			//Calculate predictions
+			OpticsEvaluation2 opticsEval = new OpticsEvaluation2();
+			ClusterPerformance result = opticsEval.evaluate(DataDirectory,"test.optics");
 			
 			//Measure Entropy
 			
@@ -158,10 +164,11 @@ public class IDS {
 			//merge confident data to knowledge
 			
 			
-			
+			System.out.println("TrainPoins:" +opticsOutputWriter.train);
+			System.out.println("TestPoints:" +opticsOutputWriter.test);
 			System.out.println("Saved:" + OutputFilePath);
 			
-		}//loop for the next testItem
+//		}//END LOOP
 		
 		
 		/**
@@ -170,19 +177,17 @@ public class IDS {
 		
 		
 		
+		System.out.println("Training Data: " + Arrays.toString(trainItems));
+		System.out.println("Testing Data: " + Arrays.toString(testItems));
 		
-		System.out.println("OPTICS Done");
-		long endTime   = System.currentTimeMillis();
 		
+		long endTime   = System.currentTimeMillis();		
 		long totalTime = endTime - startTime;
-		System.out.println("Start Time: " + startTime);
-		System.out.println("Total Runtime: " + totalTime);
+		System.out.println("OPTICS Done " + totalTime + " ms");
+		result.showstats();
 		
-		if(useParallelSearch){
-			timeParallel = totalTime;
-		}else{
-			timeSolo = totalTime;
-		}
+		return result;
+	
 		
 //		Start Time: 1400037244192
 //		End Time: 1400045681069
@@ -202,26 +207,48 @@ public class IDS {
 		
 	}
 	
+	public void evaluate(){
+		
+	}
+	
 	public static void main(String[] args) {
 		IDS ids = new IDS();
 //		
 		double epsilon = Double.MAX_VALUE; //7000 originally
 		int minPts = 50;//20;//6;
-		ids.DataSize = 1000;
+		IDS.DataSize = 1000;
 		
-		int testitems[] = {143};
-		int trainitems[] = {40};//,432,87};
-		ids.IDS_run(true,trainitems,testitems, epsilon,minPts);
+		ArrayList<ClusterPerformance> performanceList = new ArrayList<>();
 		
 		
-		System.out.println("Time with parallel : " + ids.timeParallel);
-		System.out.println("Time solor : " + ids.timeSolo);
-		System.out.println("Time Difference : " + Math.abs(ids.timeParallel- ids.timeSolo));
 		
-		long a = (long) 1457016.0;
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Date date = new Date(a);
-		System.out.println(dateFormat.format(date));
+		int testsize  = 1;
+		int trainsize = 1;
+		int limit = 1000;
+		
+		for (int i = 0; i < trainitems.length; i++) {
+			
+			generateDataIndices(testsize + trainsize, limit);
+			
+			int testitems[] = 
+			int trainitems[] = 
+			
+			
+			ClusterPerformance run_result = ids.IDS_run(true,trainitems,testitems, epsilon,minPts);
+			performanceList.add(run_result);
+		}
+		
+	}
+	
+	public static int[]generateDataIndices( int size,int limit){
+		int data[] = new int[size];
+		
+		
+		
+		
+		
+		
+		return data;
 	}
 
 }

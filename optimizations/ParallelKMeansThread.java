@@ -79,7 +79,7 @@ public class ParallelKMeansThread extends Thread {
 
 	@Override
 	public void run() {
-		System.out.println(id+" Thread Start");
+//		System.out.println(id+" Thread Start");
 		switch (threadTask) {
 		case SAMPLE:
 			
@@ -98,7 +98,7 @@ public class ParallelKMeansThread extends Thread {
 		default:
 			break;
 		}
-		System.out.println(id+ "Thread End");
+//		System.out.println(id+ "Thread End");
 		this.interrupt();
 	}
 	

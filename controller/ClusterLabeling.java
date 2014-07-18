@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.PriorityQueue;
 
 import data.Cluster;
+import data.ClusterPerformance;
 import data.Heap;
 import data.ReachabilityPoint;
 
@@ -17,7 +18,7 @@ public class ClusterLabeling {
 	 * @param clusters
 	 * @return accuracy
 	 */
-	public static double assignLabels(ArrayList<ReachabilityPoint> points,ArrayList<Cluster> clusters, boolean skipGuessing){
+	public static ClusterPerformance assignLabels(ArrayList<ReachabilityPoint> points,ArrayList<Cluster> clusters, boolean skipGuessing){
 		
 		//sort clusters according to size, 
 		PriorityQueue<Cluster> PQclusters = new PriorityQueue<>(clusters.size());
@@ -129,8 +130,8 @@ public class ClusterLabeling {
 		int falsepositive = 0;		//actual : normal, classification: attack
 		int correct = 0;
 		int incorrect = 0;
-		int trueattacks = 0;
-		int truenormal = 0;
+		int truepositive = 0;
+		int truenegative = 0;
 		
 		
 		for (int i = 0; i < points.size(); i++) {
@@ -149,18 +150,18 @@ public class ClusterLabeling {
 				int classification = rp.assignedlabel;
 				
 				if(label == 0 && classification == 0){				//true positive
-					truenormal++;
+					truenegative++;
 					correct++;
 				}else if(label != 0 && classification != 0){		// true negative
-					trueattacks ++;
+					truepositive ++;
 					correct++;
 				}else if(label != 0 && classification == 0){		//false negative
-					trueattacks ++;
+					truepositive ++;
 					falsenegative++;
 					incorrect++;
 //					System.out.println("False - "+i);
 				}else if(label == 0 && classification != 0){		//false positive
-					truenormal++;
+					truenegative++;
 					falsepositive++;
 					incorrect++;
 //					System.out.println("False + "+i);
@@ -175,29 +176,52 @@ public class ClusterLabeling {
 		int testdata = points.size() - traindata;
 		int certain = correct+incorrect - guesses;
 		
-		System.out.println("Stats:");
-		System.out.println("TrainData " + traindata);
-		System.out.println("TestData " + testdata);
-		System.out.println("DataSize " + (traindata+testdata));
-		System.out.println();
-		System.out.println("Correct " + correct  + "\tout of "+ testdata + "\t" + (correct*1.0/testdata));
-		System.out.println("InCorrect " + incorrect  + "\tout of "+ testdata + "\t" + (incorrect*1.0/testdata));
-		System.out.println("\tFalse positive " + falsenegative  + "\tout of "+ testdata + "\t" + (falsenegative*1.0/testdata));
-		System.out.println("\tFalse negative " + falsepositive  + "\tout of "+ testdata + "\t" + (falsepositive*1.0/testdata));
-		System.out.println("Certain " + certain  + "\tout of "+ testdata + "\t" + (certain*1.0/testdata));
-		System.out.println();
-		System.out.println("Assigned " + assigned  + "\tout of "+ testdata + "\t" + (assigned*1.0/testdata));
-		System.out.println("Unassigned " + unassigned  + "\tout of "+ testdata + "\t" + (unassigned*1.0/testdata));
-		System.out.println("Guesses " + guesses  + "\tout of "+ testdata + "\t" + (guesses*1.0/testdata));
-		System.out.println("Skippedguesses " + skippguess  + "\tout of "+ testdata + "\t" + (skippguess*1.0/testdata));
-		System.out.println("True Attacks " + trueattacks  + "\tout of "+ testdata + "\t" + (trueattacks*1.0/testdata));
-		System.out.println("True Normal " + truenormal  + "\tout of "+ testdata + "\t" + (truenormal*1.0/testdata));
+		ClusterPerformance labelResult = new ClusterPerformance();
+		labelResult.traindata = traindata;
+		labelResult.testdata = testdata;
+		
+		labelResult.correct = correct;
+		labelResult.incorrect = incorrect;
+		labelResult.truepositive = truepositive;
+		labelResult.truenegative = truenegative;
+		labelResult.falsenegative = falsenegative;
+		labelResult.falsepositive = falsepositive;
+		
+		labelResult.certain = certain;
+		labelResult.guesses = guesses;
+		labelResult.assigned = assigned;
+		labelResult.unassigned = unassigned;
+		
+		labelResult.clustersFormed = clusters.size();
+		
+		
+//		labelResult.showstats();
+		
+		
+		
+//		System.out.println("Stats:");
+//		System.out.println("TrainData " + traindata);
+//		System.out.println("TestData " + testdata);
+//		System.out.println("DataSize " + (traindata+testdata));
+//		System.out.println();
+//		System.out.println("Correct " + correct  + "\tout of "+ testdata + "\t" + (correct*1.0/testdata));
+//		System.out.println("InCorrect " + incorrect  + "\tout of "+ testdata + "\t" + (incorrect*1.0/testdata));
+//		System.out.println("\tFalse positive " + falsenegative  + "\tout of "+ testdata + "\t" + (falsenegative*1.0/testdata));
+//		System.out.println("\tFalse negative " + falsepositive  + "\tout of "+ testdata + "\t" + (falsepositive*1.0/testdata));
+//		System.out.println("Certain " + certain  + "\tout of "+ testdata + "\t" + (certain*1.0/testdata));
+//		System.out.println();
+//		System.out.println("Assigned " + assigned  + "\tout of "+ testdata + "\t" + (assigned*1.0/testdata));
+//		System.out.println("Unassigned " + unassigned  + "\tout of "+ testdata + "\t" + (unassigned*1.0/testdata));
+//		System.out.println("Guesses " + guesses  + "\tout of "+ testdata + "\t" + (guesses*1.0/testdata));
+//		System.out.println("Skippedguesses " + skippguess  + "\tout of "+ testdata + "\t" + (skippguess*1.0/testdata));
+//		System.out.println("True Attacks " + truepositive  + "\tout of "+ testdata + "\t" + (truepositive*1.0/testdata));
+//		System.out.println("True Normal " + truenegative  + "\tout of "+ testdata + "\t" + (truenegative*1.0/testdata));
 		
 		
 		
 		
 		
-		
+		return labelResult;
 		
 	}
 

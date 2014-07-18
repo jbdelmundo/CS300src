@@ -341,33 +341,6 @@ public class ParallelKMeans {
 		}
 		
 				
-//		for (int j = 0; j < D.size(); j++) {
-//			DataPacket p =  D.elementAt(j);
-//			
-//			int centroidIndex = -1;
-//			double centroidDistance = Double.MAX_VALUE;
-//			//find the nearest centroid
-//			for (int j2 = 0; j2 < centroids.length; j2++) {
-//
-////				double cdist = ParallelKMeans.kmeansIndexdist(centroids[j2], p);
-//				double cdist = ParallelKMeans.kmeansdist(centroids[j2], p);
-//				if(cdist < centroidDistance){
-//					centroidIndex = j2;
-//					centroidDistance = cdist;
-//				}
-//			}
-//			
-//			//assign to the nearest centroid	
-//			index[centroidIndex].add(p);
-//			
-//			
-////			for (int i = 0; i < centroids[centroidIndex].ContinuousAttr.length; i++) {
-////				centroids[centroidIndex].ContinuousAttr[i] += p.ContinuousAttr[i];
-////			}
-//			/*****WHATS WRONG WITH THIS LINE ?!?!*/
-//			
-//		}
-		
 		
 	
 		System.out.println("\n");
@@ -399,14 +372,14 @@ public class ParallelKMeans {
 					overhead += indexsize-ideal;
 				}
 						
-				System.out.println("Index Centroid "+i+ " member count: " + indexsize + "\t ideal:" + ideal + " " + remark );
+//				System.out.println("Index Centroid "+i+ " member count: " + indexsize + "\t ideal:" + ideal + " " + remark );
 			}
 			
-			System.out.println("IndexSize:" + index.length + " Total Overhead " + overhead + "saved " + saved);
+			System.out.println("Centroid Indices:" + index.length + " Total Overhead " + overhead + "saved " + saved);
 			System.out.println("Percentage overhead " +overhead*1.0/D.size());
 			System.out.println("Percentage saved " +saved*1.0/D.size());
 			
-			System.out.println("Improvement: " + (saved - overhead)*1.0/D.size());
+			System.out.println("IMPROVEMENT: " + (saved - overhead)*1.0/D.size());
 				
 		}
 	

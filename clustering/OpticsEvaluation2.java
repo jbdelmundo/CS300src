@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import controller.ClusterLabeling;
 
 import data.Cluster;
+import data.ClusterPerformance;
 import data.ReachabilityPoint;
 import data.SteepArea;
 import fileIO.OpticsOrderingReader;
@@ -15,27 +16,38 @@ public class OpticsEvaluation2 {
 	
 	ReachabilityPoint currentpoint;					//for iterations
 	ReachabilityPoint nextPoint = null;				//for iterations
-
+	
 	static boolean debugMode = false;
 	
-		//estimate lang
-	//double xi= 0.02;			//difference threshold
+	
 	
 	public static void main(String[] args) {
 		OpticsEvaluation2 opticsEval = new OpticsEvaluation2();
-//		opticsEval.evaluate(32, 67);
-		opticsEval.evaluate(1, 2);
-//		opticsEval.evaluate(0, 1);
+
+		opticsEval.evaluate("RandomPieces_1000","test.optics");
+
 		System.out.println("Done");
 		
 	}
 	
-	public void evaluate(int trainItem, int testItem){
+	public ClusterPerformance evaluate(String DataDirectory, String opticsFilename){
 		
-		String DataDirectory = "RandomPieces_1000";
-		String opticsFilename = "test.optics";
+		
 		
 		ArrayList<ReachabilityPoint> ordering = OpticsOrderingReader.readFile(DataDirectory + File.separatorChar+opticsFilename);
+		
+		int test = 0;
+		int train = 0;
+		for (ReachabilityPoint reachabilityPoint : ordering) {
+			if(reachabilityPoint.hasLabel){
+				test++;
+			}else{
+				train++;
+			}
+		}
+		
+		
+		
 		
 		// steepness sensitivity: 0 (sensitive) -> 1 (insensitve)
 		double end_xi = 0.1; 			//higher
@@ -59,16 +71,21 @@ public class OpticsEvaluation2 {
 		ArrayList<Cluster> clusters = extractClusters(ordering, areas,extract_xi,minPts);
 		System.out.println("Clusters Found: " +clusters.size());
 		
-		ClusterLabeling.assignLabels(ordering, clusters,skipguessing);
+		ClusterPerformance result = ClusterLabeling.assignLabels(ordering, clusters,skipguessing);
 		
 		
 		
 //		if(suppressoutput)System.out.println("Areas " + areas.size());
 //		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
-		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
-		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
-//		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
+//		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
+//		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
+		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
 		
+		
+		
+		System.out.println("END OF OPTICS EVAL");
+		
+		return result;
 	}
 	
 	/**
@@ -226,7 +243,6 @@ public class OpticsEvaluation2 {
 	
 	private Cluster findStartandEndPoints(ArrayList<ReachabilityPoint> points, SteepArea sda,SteepArea sua,double xi, int minpts){
 		
-
 		
 		//find start and end areas
 		double reachStart =  points.get(sda.startIndex).reachability ; 	//fix for negative values
