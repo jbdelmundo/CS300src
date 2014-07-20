@@ -56,7 +56,7 @@ public class IDS {
 	public static int probecount = 15;
 	
 	public static int DataSize = 0;
-	
+	public DataSet knowledge;
 	
 	
 	
@@ -93,7 +93,7 @@ public class IDS {
 		long startTime = System.currentTimeMillis();
 		
 		
-		DataSet knowledge = combineDataSets(DataDirectory, trainItems, false);
+		knowledge = combineDataSets(DataDirectory, trainItems, false);
 		
 		
 		
@@ -163,6 +163,8 @@ public class IDS {
 			OpticsEvaluation2 opticsEval = new OpticsEvaluation2();
 			ClusterPerformance result = opticsEval.evaluate(DataDirectory,"test.optics");
 			
+			DataSet confidentData = ClusterLabeling.ConfidentPoints;
+			
 			//Measure Entropy
 			
 			
@@ -224,21 +226,24 @@ public class IDS {
 		
 		
 		
-		int iterations = 10;		
-		int testsize  = 100;
+			
+		int testsize  = 1;
 		
-		int trainSizeStart = 10;
-		int trainSizeEnd = 150;
-		int trainSizeIncrement = 10;
+		int trainSizeStart = 100;
+		int trainSizeEnd = 101;
+		int trainSizeIncrement = 1;
 		
 		int limit = 10000;
 		
 		
 		
 		for (int trainsize = trainSizeStart; trainsize < trainSizeEnd; trainsize +=trainSizeIncrement) {		//loop for each trainsize
+			int iterations = 10 ;
 			
 			ArrayList<ClusterPerformance> performanceList = new ArrayList<>();
-			PrintWriter pw = new PrintWriter(new File("Performance  " +  trainsize + ".txt"));
+			PrintWriter pw = new PrintWriter(new File("Performance  " +  trainsize + "-"+iterations+"X.txt"));
+			
+				
 			
 			for (int i = 0; i < iterations; i++) {	//perform multiple benchmarks
 				

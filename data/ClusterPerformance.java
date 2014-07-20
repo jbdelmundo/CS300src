@@ -45,9 +45,9 @@ public class ClusterPerformance {
 		
 	
 		System.out.println("Stats:");
-		System.out.println("TrainData " + traindata);
-		System.out.println("TestData " + testdata);
-		System.out.println("DataSize " + (traindata+testdata));
+		System.out.println("TrainData \t" + traindata);
+		System.out.println("TestData \t" + testdata);
+		System.out.println("DataSize \t" + (traindata+testdata));
 		System.out.println();
 		System.out.println("Correct " + correct  + "\tout of "+ testdata + "\t" + (correct*1.0/testdata));
 		System.out.println("InCorrect " + incorrect  + "\tout of "+ testdata + "\t" + (incorrect*1.0/testdata));
@@ -59,6 +59,24 @@ public class ClusterPerformance {
 		System.out.println("Unassigned " + unassigned  + "\tout of "+ testdata + "\t" + (unassigned*1.0/testdata));
 		System.out.println("Guesses " + guesses  + "\tout of "+ testdata + "\t" + (guesses*1.0/testdata));
 		
+	}
+	
+	public void printToFile( PrintWriter pw){
+		pw.println("Stats:");
+		pw.println("TrainData \t" + traindata);
+		pw.println("TestData \t" + testdata);
+		pw.println("DataSize \t" + (traindata+testdata));
+		pw.println();
+		pw.println("Correct " + correct  + "\tout of "+ testdata + "\t" + (correct*1.0/testdata));
+		pw.println("InCorrect " + incorrect  + "\tout of "+ testdata + "\t" + (incorrect*1.0/testdata));
+		pw.println("\tFalse positive " + falsenegative  + "\tout of "+ testdata + "\t" + (falsenegative*1.0/testdata));
+		pw.println("\tFalse negative " + falsepositive  + "\tout of "+ testdata + "\t" + (falsepositive*1.0/testdata));
+		pw.println("Certain " + certain  + "\tout of "+ testdata + "\t" + (certain*1.0/testdata));
+		pw.println();
+		pw.println("Assigned " + assigned  + "\tout of "+ testdata + "\t" + (assigned*1.0/testdata));
+		pw.println("Unassigned " + unassigned  + "\tout of "+ testdata + "\t" + (unassigned*1.0/testdata));
+		pw.println("Guesses " + guesses  + "\tout of "+ testdata + "\t" + (guesses*1.0/testdata));
+		pw.println("Clusters Formed\t" + clustersFormed );
 	}
 	
 	

@@ -5,12 +5,16 @@ import java.util.PriorityQueue;
 
 import data.Cluster;
 import data.ClusterPerformance;
+import data.DataPacket;
+import data.DataSet;
 import data.Heap;
 import data.ReachabilityPoint;
 
 public class ClusterLabeling {
 	
 	public static final int UNDEFINED = ReachabilityPoint.UNDEFINED;
+	
+	public static DataSet ConfidentPoints;
 	
 	/**
 	 * Creates label assignments to those that have no assignments. This will start with smallest clusters.
@@ -20,6 +24,8 @@ public class ClusterLabeling {
 	 */
 	public static ClusterPerformance assignLabels(ArrayList<ReachabilityPoint> points,ArrayList<Cluster> clusters, boolean skipGuessing){
 		
+		
+		
 		//sort clusters according to size, 
 		PriorityQueue<Cluster> PQclusters = new PriorityQueue<>(clusters.size());
 		
@@ -27,6 +33,7 @@ public class ClusterLabeling {
 			PQclusters.add(cluster);
 		}
 		
+		ConfidentPoints = new DataSet(points.size());				// confident points are points that fall into a cluster
 		
 		while(!PQclusters.isEmpty()){
 			Cluster c = PQclusters.poll();
@@ -59,6 +66,7 @@ public class ClusterLabeling {
 				
 				if(previousLabel != UNDEFINED && rp.assignedlabel == UNDEFINED){
 					rp.assignedlabel = previousLabel;
+					ConfidentPoints.add(new DataPacket(rp.datapacket));			
 				}
 				
 				
@@ -80,6 +88,9 @@ public class ClusterLabeling {
 				
 		// guess for remaining noise -- TEST DATA NOT ON A CLUSTER
 		// TODO Find other alternatives other than left to right
+		
+		
+		
 		
 		for (int i = 0; i < points.size() && !skipGuessing; i++) {
 			ReachabilityPoint rp = points.get(i);
