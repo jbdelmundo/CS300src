@@ -230,8 +230,8 @@ public class IDS {
 
 	public static void main(String[] args) throws FileNotFoundException {
 
-		SingleRun();
-		 System.exit(0);
+//		SingleRun();
+//		 System.exit(0);
 
 		IDS ids = new IDS();
 
@@ -240,13 +240,13 @@ public class IDS {
 		IDS.DataSize = 10000;
 		int limit = 10000;
 
-		int maxIterations = 2;
+		int maxIterations = 10;
 
-		int initTrainSize = 1;
+		int initTrainSize = 50;
 
 		int trainsize = initTrainSize;
 
-		int testSize = 5; // knowledge to be absorbed per retraining
+		int testSize = 3; // knowledge to be absorbed per retraining
 		int retrainLimit = 10; // number of retraining
 
 		ArrayList<ClusterPerformance> averagePerformance[] = new ArrayList[maxIterations];
@@ -267,7 +267,7 @@ public class IDS {
 
 			int testitems[][] = new int[retrainLimit][testSize];
 			int trainitems[] = new int[trainsize];
-			generateSequentialDataIndices(trainitems, testitems, limit);
+			generateSequentialDataIndices2(trainitems, testitems, limit);
 
 			System.out.println("Train DATA: " + trainitems.length
 					+ Arrays.toString(trainitems));
@@ -445,7 +445,7 @@ public class IDS {
 		
 		for (int i = 0; i < testOffsets.length; i++) {
 			int range = limit - lastindex - (testsize*(testCases-i+1));
-			System.out.println("ranbge " + range + "   " + lastindex);
+			System.out.println("range " + range + "   " + lastindex);
 			testOffsets[i] = lastindex + r.nextInt(range);
 
 			lastindex = testOffsets[i] + testsize - 1;
@@ -454,6 +454,10 @@ public class IDS {
 		for (int i = 0; i < testCases; i++) {
 			for (int j = 0; j < testsize; j++) {
 				test[i][j] = testOffsets[i] + j;
+				if(test[i][j] > limit){
+					System.err.println("Again");
+					System.exit(-1);
+				}
 			}
 		}
 		
@@ -462,6 +466,59 @@ public class IDS {
 			System.out.println("Test " +i+ Arrays.toString(test[i]));
 		}
 
+	}
+	
+	public static void generateSequentialDataIndices2(int train[], int test[][],
+			int limit){
+		
+
+		Random r = new Random(System.currentTimeMillis());
+		int trainsize = train.length;
+		int testCases = test.length;
+		int testsize = test[0].length;
+		
+		int segmentSize = trainsize + testCases * testsize;
+		
+		int segments = limit/segmentSize;
+		
+		
+		
+		int choices[] = new int[segments];
+		for (int i = 0; i < choices.length; i++) {
+			choices[i] = (i*segmentSize)+1;
+		}
+		for (int i = 0; i < choices.length; i++) {
+			int ri = r.nextInt(choices.length);
+			int temp = choices[ri];
+			choices[ri] = choices[i];
+			choices[i] = temp;
+		}
+		
+		int trainSegOffset = r.nextInt(segmentSize - trainsize);
+		int trainSegment = choices[0];
+		int trainoffset = trainSegment + trainSegOffset;
+		
+		int testOffsets[] = new int[testCases];
+		for (int i = 0; i < testOffsets.length; i++) {
+			testOffsets[i] = r.nextInt(segmentSize - testsize) + choices[i+1];
+		}
+		
+		//populate
+		for (int i = 0; i < trainsize; i++) {
+			train[i] = trainoffset + i;
+		}
+		
+		for (int i = 0; i < testOffsets.length; i++) {
+			for (int j = 0; j < testsize; j++) {
+				test[i][j] = testOffsets[i] + j;
+			}
+		}
+		
+		System.out.println("TrainData " + Arrays.toString(train));
+		for (int i = 0; i < test.length; i++) {
+			System.out.println("Test " +i+ " --- " +testOffsets[i] +Arrays.toString(test[i]));
+		}
+		
 	}
 
 }

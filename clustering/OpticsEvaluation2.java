@@ -72,9 +72,9 @@ public class OpticsEvaluation2 {
 		ArrayList<Cluster> clusters = extractClusters(ordering, areas,extract_xi,minPts);
 		System.out.println("Clusters Found: " +clusters.size());
 		
-		for (Cluster cluster : clusters) {
-			System.out.println("Cluster: " + cluster.startIndex + " --- " + cluster.endIndex);
-		}
+//		for (Cluster cluster : clusters) {
+//			System.out.println("Cluster: " + cluster.startIndex + " --- " + cluster.endIndex);
+//		}
 		
 		ClusterPerformance result = ClusterLabeling.assignLabels(ordering, clusters,skipguessing);
 		
