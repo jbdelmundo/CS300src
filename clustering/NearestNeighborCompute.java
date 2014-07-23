@@ -9,7 +9,6 @@ import data.DataPacket;
 import data.DataSet;
 
 import data.ReachabilityPoint;
-import optimizations.DBConnection;
 
 /**
  * NearestNeighborCompute performs N-N Search based on distance function
@@ -28,7 +27,7 @@ public class NearestNeighborCompute {
 	
 	public static boolean useParallelSearch = false;
 	
-	static DBConnection dbconn;
+
 	static HashMap<Integer, Boolean> isInDB = new HashMap<Integer, Boolean>();
 
 	/**
@@ -92,6 +91,18 @@ public class NearestNeighborCompute {
 	}
 	
 	public static DataSet findNeighbors(DataSet dataset, DataPacket object,	 double epsilon) {
+		
+//		if(epsilon == Double.MAX_VALUE){									//Override if will include all
+//			DataSet nearestNeighbors = new DataSet(dataset.size());
+//			for (DataPacket dataitem : dataset) {
+//				if(object.equals(dataitem))
+//					continue;
+//				
+//				nearestNeighbors.add(dataitem);
+//			}
+//			return nearestNeighbors;
+//		}
+		
 
 		if(IDS.useKLSH){
 			return IDS.pkm.query(object, dataset, epsilon, IDS.kmeansResults, IDS.probecount);

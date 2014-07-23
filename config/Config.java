@@ -103,7 +103,7 @@ public class Config {
 			scan.close();
 			return INCLUDED_ATTRIBUTES;
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 			return null;
 		}

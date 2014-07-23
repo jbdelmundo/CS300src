@@ -3,13 +3,10 @@ package clustering;
 import java.io.FileNotFoundException;
 
 import controller.IDS;
-import data.ConfigAttributes;
 import data.DataPacket;
 import data.DataSet;
 import data.MinHeap;
 import fileIO.DataPacketWriter;
-import optimizations.DBConnection;
-import preprocessing.DataIntegration;
 
 
 /**

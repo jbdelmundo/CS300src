@@ -403,6 +403,8 @@ public class ParallelKMeans {
 		int searchspace = 0;
 		
 		
+		
+		
 		for (int i = 0; i < kmeansResults.length; i++) {
 			
 			//find the nearest centroids
@@ -435,6 +437,8 @@ public class ParallelKMeans {
 				for (DataPacket dataPacket : compareTo) {
 					if (source.equals(dataPacket))
 						continue;
+					
+					
 					double dist = kmeansIndexdist(source, dataPacket);
 					// System.out.println("findNeighbors:" + dist);
 					if (epsilon >= dist) {

@@ -16,9 +16,11 @@ public class ReachabilityPoint extends HeapObject{
 	
 	public static boolean useBooleanVerification = false;
 	
+	public double confidence = 0;
+	
 	@Override
 	public int compareTo(HeapObject o) {
-		// TODO Auto-generated method stub
+		
 		System.err.println("Unimplemented");
 		return 0;
 	}

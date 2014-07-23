@@ -28,6 +28,9 @@ public class ClusterPerformance {
 	
 	public int clustersFormed;
 	
+	public int addedCorrect;
+	public int addedIncorrect;
+	
 	
 	public double accuracy(){
 		return ((double)correct/testdata);
@@ -77,6 +80,7 @@ public class ClusterPerformance {
 		pw.println("Unassigned " + unassigned  + "\tout of "+ testdata + "\t" + (unassigned*1.0/testdata));
 		pw.println("Guesses " + guesses  + "\tout of "+ testdata + "\t" + (guesses*1.0/testdata));
 		pw.println("Clusters Formed\t" + clustersFormed );
+		pw.println("Added  Correct\t" + addedCorrect + "\t out of " + (addedCorrect+addedIncorrect) + "\t" + (double)addedCorrect/(addedCorrect+addedIncorrect));
 	}
 	
 	
@@ -146,4 +150,142 @@ public class ClusterPerformance {
 		pw.println("ClustersFormed " + (clustersFormed*1.0/(testdata*size)));
 		
 	}
+	
+	public static void trackImprovement(ArrayList<ClusterPerformance> list, PrintWriter pw){
+		
+		
+		//Header
+		pw.print("Run,");
+		pw.print("TrainData,");
+		pw.print("TestData,");
+		pw.print("Correct,");
+		pw.print("Incorrect,");
+		pw.print("False Positive,");
+		pw.print("False Negative,");
+		pw.print("Assigned,");
+		pw.print("Unassigned,");
+		pw.print("Certain,");
+		pw.print("Clusters");
+		pw.print("AddedCorrect");
+		
+		
+		pw.print("\n");
+
+		
+		int ctr = 1;
+	
+		for (ClusterPerformance cp : list) {
+			
+			pw.print(ctr + ",");
+			pw.print(cp.traindata + ",");
+			pw.print(cp.testdata + ",");
+			
+			double testdata = cp.testdata;
+			
+			pw.print(cp.correct/testdata + ",");
+			pw.print(cp.incorrect/testdata + ",");
+			pw.print(cp.falsepositive/testdata + ",");
+			pw.print(cp.falsenegative/testdata + ",");
+			
+			pw.print(cp.assigned/testdata + ",");			
+			pw.print(cp.unassigned/testdata + ",");
+			pw.print(cp.certain/testdata + ",");
+			pw.print(cp.clustersFormed + ",");
+			pw.print((double)cp.addedCorrect/(cp.addedCorrect + cp.addedIncorrect) + "");
+			
+			
+			pw.print("\n");
+			
+			ctr++;			
+		}
+	}
+	
+	public static void trackAverageImprovement(ArrayList<ClusterPerformance> list[], PrintWriter pw){
+		
+		
+		//Header
+		pw.print("Run,");
+		pw.print("TrainData,");
+		pw.print("TestData,");
+		pw.print("Correct,");
+		pw.print("Incorrect,");
+		pw.print("False Positive,");
+		pw.print("False Negative,");
+		pw.print("Assigned,");
+		pw.print("Unassigned,");
+		pw.print("Certain,");
+		pw.print("Clusters");
+		pw.print("AddedCorrect");
+		
+		pw.print("\n");
+
+		
+		
+		
+		for (int i = 0; i < list[0].size(); i++) {				// loop over the retraining
+			
+			int traindata = 0;
+			int testdata = 0;
+			
+			double correct = 0;
+			double incorrect = 0;		
+			
+			double falsepositive = 0;
+			double falsenegative = 0;
+					
+			double assigned = 0, unassigned = 0;
+			double certain = 0;
+			
+			double clustersFormed = 0;
+			double addedCorrect = 0;
+			
+			
+			
+			for (int j = 0; j < list.length; j++) {						//compute the average for each retraining , loop over the array
+				ClusterPerformance cp = list[j].get(i);					// all the ith run/retraining, jth iteration
+				
+				traindata = cp.traindata;
+				testdata = cp.testdata;
+			
+				correct +=  (double)cp.correct / testdata;
+				incorrect +=  (double)cp.incorrect / testdata;
+				falsepositive +=  (double)cp.falsepositive / testdata;
+				falsenegative +=  (double)cp.falsenegative / testdata;
+				assigned +=  (double)cp.assigned / testdata;
+				unassigned +=  (double)cp.unassigned / testdata;
+				certain +=  (double)cp.certain / testdata;
+				clustersFormed +=  clustersFormed;
+				addedCorrect += (double)cp.addedCorrect/(cp.addedCorrect + cp.addedIncorrect);
+							
+			}	
+			double iterations = list.length;
+		
+			pw.print((i+1) + ",");
+			pw.print(traindata + ",");
+			pw.print(testdata + ",");
+			
+			
+			pw.print(correct/iterations + ",");
+			pw.print(incorrect/iterations + ",");
+			pw.print(falsepositive/iterations + ",");
+			pw.print(falsenegative/iterations + ",");
+			
+			pw.print(assigned/iterations + ",");			
+			pw.print(unassigned/iterations + ",");
+			pw.print(certain/iterations + ",");
+			pw.print(clustersFormed/iterations + ",");
+			pw.print(addedCorrect/iterations + "");
+			
+			pw.print("\n");
+			
+		}
+		
+	
+		
+		
+	}
+	
+	
+	
+
 }

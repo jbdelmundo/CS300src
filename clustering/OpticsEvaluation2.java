@@ -17,14 +17,14 @@ public class OpticsEvaluation2 {
 	ReachabilityPoint currentpoint;					//for iterations
 	ReachabilityPoint nextPoint = null;				//for iterations
 	
-	static boolean debugMode = false;
+	static boolean debugMode = true;
 	
 	
 	
 	public static void main(String[] args) {
 		OpticsEvaluation2 opticsEval = new OpticsEvaluation2();
 
-		opticsEval.evaluate("RandomPieces_1000","test.optics");
+		opticsEval.evaluate("SequentialPieces_10000","test.optics");
 
 		System.out.println("Done");
 		
@@ -71,17 +71,22 @@ public class OpticsEvaluation2 {
 		ArrayList<Cluster> clusters = extractClusters(ordering, areas,extract_xi,minPts);
 		System.out.println("Clusters Found: " +clusters.size());
 		
+		for (Cluster cluster : clusters) {
+			System.out.println("Cluster: " + cluster.startIndex + " --- " + cluster.endIndex);
+		}
+		
 		ClusterPerformance result = ClusterLabeling.assignLabels(ordering, clusters,skipguessing);
 		
 		
 		
 //		if(suppressoutput)System.out.println("Areas " + areas.size());
-//		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
+		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
 //		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
 //		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
 //		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
+//		
 		
-		
+		result.showstats();
 		
 		System.out.println("END OF OPTICS EVAL");
 		
@@ -105,6 +110,11 @@ public class OpticsEvaluation2 {
 		double mib = 0;
 		
 		int areaCounter = 0;
+		if(areas.size() == 0){
+			SetOfClusters.add(new Cluster(0, points.size()-1));
+			return SetOfClusters;
+		}
+		
 		SteepArea currentArea = areas.get(areaCounter);
 		ReachabilityPoint currenpoint;
 		

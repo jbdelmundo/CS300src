@@ -14,7 +14,13 @@ public class ClusterLabeling {
 	
 	public static final int UNDEFINED = ReachabilityPoint.UNDEFINED;
 	
-	public static DataSet ConfidentPoints;
+	public static DataSet  ConfidentPoints;
+	
+	public static int correctConfident = 0;
+	public static int incorrectConfident = 0;
+	
+	
+	
 	
 	/**
 	 * Creates label assignments to those that have no assignments. This will start with smallest clusters.
@@ -24,7 +30,8 @@ public class ClusterLabeling {
 	 */
 	public static ClusterPerformance assignLabels(ArrayList<ReachabilityPoint> points,ArrayList<Cluster> clusters, boolean skipGuessing){
 		
-		
+		correctConfident = 0;
+		incorrectConfident = 0;
 		
 		//sort clusters according to size, 
 		PriorityQueue<Cluster> PQclusters = new PriorityQueue<>(clusters.size());
@@ -51,9 +58,24 @@ public class ClusterLabeling {
 				
 				//if train data-- assign a label
 				if(rp.hasLabel){
+					
+					
+					// TODO ---- ADD NEW HERE july 21, if previous is undefined and 
+					if(previousLabel == ReachabilityPoint.UNDEFINED){		//first train point encountered in cluster,
+						for (int j = c.startIndex; j < i; j++) {
+							ReachabilityPoint prevpt = points.get(i);
+							
+							if(prevpt.assignedlabel == UNDEFINED){
+								prevpt.assignedlabel = rp.getDataPacketLabel();
+								addToConfidentPoints(prevpt);
+							}
+						}
+					}
+					
+						
+						
 					previousLabel = rp.getDataPacketLabel();
 					rp.assignedlabel = rp.getDataPacketLabel();
-					
 					continue;
 				}
 
@@ -66,10 +88,10 @@ public class ClusterLabeling {
 				
 				if(previousLabel != UNDEFINED && rp.assignedlabel == UNDEFINED){
 					rp.assignedlabel = previousLabel;
-					ConfidentPoints.add(new DataPacket(rp.datapacket));			
+					
+					addToConfidentPoints(rp);
+					
 				}
-				
-				
 				
 			}
 		}//all clusters done -- not all training data and test data is included in a cluster
@@ -206,34 +228,44 @@ public class ClusterLabeling {
 		labelResult.clustersFormed = clusters.size();
 		
 		
-//		labelResult.showstats();
-		
-		
-		
-//		System.out.println("Stats:");
-//		System.out.println("TrainData " + traindata);
-//		System.out.println("TestData " + testdata);
-//		System.out.println("DataSize " + (traindata+testdata));
-//		System.out.println();
-//		System.out.println("Correct " + correct  + "\tout of "+ testdata + "\t" + (correct*1.0/testdata));
-//		System.out.println("InCorrect " + incorrect  + "\tout of "+ testdata + "\t" + (incorrect*1.0/testdata));
-//		System.out.println("\tFalse positive " + falsenegative  + "\tout of "+ testdata + "\t" + (falsenegative*1.0/testdata));
-//		System.out.println("\tFalse negative " + falsepositive  + "\tout of "+ testdata + "\t" + (falsepositive*1.0/testdata));
-//		System.out.println("Certain " + certain  + "\tout of "+ testdata + "\t" + (certain*1.0/testdata));
-//		System.out.println();
-//		System.out.println("Assigned " + assigned  + "\tout of "+ testdata + "\t" + (assigned*1.0/testdata));
-//		System.out.println("Unassigned " + unassigned  + "\tout of "+ testdata + "\t" + (unassigned*1.0/testdata));
-//		System.out.println("Guesses " + guesses  + "\tout of "+ testdata + "\t" + (guesses*1.0/testdata));
-//		System.out.println("Skippedguesses " + skippguess  + "\tout of "+ testdata + "\t" + (skippguess*1.0/testdata));
-//		System.out.println("True Attacks " + truepositive  + "\tout of "+ testdata + "\t" + (truepositive*1.0/testdata));
-//		System.out.println("True Normal " + truenegative  + "\tout of "+ testdata + "\t" + (truenegative*1.0/testdata));
-		
-		
-		
-		
+		labelResult.addedCorrect = correctConfident;
+		labelResult.addedIncorrect = incorrectConfident;
 		
 		return labelResult;
 		
 	}
 
+	
+	public static void addToConfidentPoints(ReachabilityPoint rp){
+		//create new confident training point
+		
+		if(rp.reachability <  0 || rp.reachability >=  3000 || true){		//threshold for adding
+			return;	//TODO add custom tweaks here to improve performance --- add based on a reachability value maybe?
+		}
+		
+		
+		
+		DataPacket confidentpoint = new DataPacket(rp.datapacket); 
+		confidentpoint.label = rp.assignedlabel;							//overwrite label;
+		confidentpoint.hasLabel = true;
+		ConfidentPoints.add(confidentpoint);		
+		
+		int label = rp.label;
+		int classification = rp.assignedlabel;
+		
+		if(label == 0 && classification == 0){				//true positive
+			correctConfident++;			
+		}else if(label != 0 && classification != 0){		// true negative
+			correctConfident++;
+		}else if(label != 0 && classification == 0){		//false negative
+			incorrectConfident++;
+//			System.out.println("False - "+i);
+		}else if(label == 0 && classification != 0){		//false positive
+			incorrectConfident++;
+//			System.out.println("False + "+i);
+		}
+		
+		
+		
+	}
 }
