@@ -17,7 +17,7 @@ public class OpticsEvaluation2 {
 	ReachabilityPoint currentpoint;					//for iterations
 	ReachabilityPoint nextPoint = null;				//for iterations
 	
-	static boolean debugMode = true;
+	static boolean debugMode = false;
 	
 	
 	
@@ -25,6 +25,7 @@ public class OpticsEvaluation2 {
 		OpticsEvaluation2 opticsEval = new OpticsEvaluation2();
 
 		opticsEval.evaluate("SequentialPieces_10000","test.optics");
+//		opticsEval.evaluate("RandomPieces_10000","test.optics");
 
 		System.out.println("Done");
 		
@@ -57,7 +58,7 @@ public class OpticsEvaluation2 {
 		
 		int minPts = 3;				//minimum size of area
 		int nonConseqLimit = 3;		//keep it low
-		boolean skipguessing = true;
+		boolean skipguessing = false;
 		
 		
 		ArrayList<SteepArea> areas =  findSteepAreas(ordering, starting_xi, reset_xi, end_xi, minPts,nonConseqLimit);
@@ -80,13 +81,14 @@ public class OpticsEvaluation2 {
 		
 		
 //		if(suppressoutput)System.out.println("Areas " + areas.size());
-		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
+//		OpticsPlot.plotGraphAreas("Areas", ordering, areas);
 //		OpticsPlot.plotGraphClusters("Clusters", ordering, clusters);
 //		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY);
+//		OpticsPlot.plotGraph("Attacks", ordering, OpticsPlot.BY_ATTACK_CATEGORY_DETAILED);
 //		OpticsPlot.plotGraph("Test Vs Train", ordering, OpticsPlot.BY_TRAIN_VS_TEST);
 //		
 		
-		result.showstats();
+//		result.showstats();
 		
 		System.out.println("END OF OPTICS EVAL");
 		

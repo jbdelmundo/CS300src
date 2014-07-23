@@ -46,9 +46,19 @@ public class OPTICSAlgorithm {
 //		DataSet neighbors = NearestNeighborCompute.findNeighborsAndCoreDist(setOfObjects, obj, minPts,epsilon);
 		DataSet neighbors = NearestNeighborCompute.findNeighbors(setOfObjects, obj, epsilon);
 		
+//		if(neighbors.size() != setOfObjects.size()-1){
+//			System.err.println("Neighborhood " + neighbors.size());
+//			System.err.println("Data " + setOfObjects.size());
+//			
+//			System.out.println("Eps " + epsilon);
+//			
+//			
+//			System.exit(1);
+//		}
+		
 		obj.isProcessed = true;
 		processed++;
-		obj.reachability_dist = UNDEFINED*1000;
+		obj.reachability_dist = UNDEFINED *1000;
 		obj.core_dist = getCoreDistance(neighbors,obj, epsilon, minPts);
 		
 		// OrderedFile.append(obj.toString());
@@ -104,13 +114,13 @@ public class OPTICSAlgorithm {
 			if(!obj.isProcessed){
 				double new_r_dist;
 				
-				if(obj.neighborID == centerObj.DataPacketID){
+				if(obj.neighborID == centerObj.DataPacketID && false){
 					new_r_dist = Math.max(c_dist, obj.distToNeighbor);
 				}else{
 					new_r_dist =  Math.max(c_dist, computeDistance(centerObj,obj));
 				}
 				
-				if(obj.reachability_dist  == UNDEFINED){
+				if(obj.reachability_dist < 0 ){		//undefined
 					obj.reachability_dist = new_r_dist;
 					orderedSeeds.push(obj);
 				}else{

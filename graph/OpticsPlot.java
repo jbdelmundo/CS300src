@@ -40,6 +40,7 @@ public class OpticsPlot extends JFrame{
 	public static final int BY_PREDICTED_ATTACK_CATEGORY = 3;
 	public static final int BY_TRAIN_VS_TEST = 4;	
 	public static final int BY_CLUSTER = 5;
+	public static final int BY_ATTACK_CATEGORY_DETAILED = 6;
 	
 	
 	public OpticsPlot(String title) {
@@ -96,6 +97,9 @@ public class OpticsPlot extends JFrame{
 			addDataByTrainTest(points);
 			break;
 			
+		case BY_ATTACK_CATEGORY_DETAILED:
+			addDataByCategoryDetailed(points, false);
+			break;
 		default:
 			break;
 		}
@@ -310,6 +314,30 @@ public class OpticsPlot extends JFrame{
 		}
 	}
 
+	public void addDataByCategoryDetailed(ArrayList<ReachabilityPoint> points, boolean usePrediction){
+		
+		XYSeries data[] = new  XYSeries[DataPacket.LABELS.length];
+		for (int i = 0; i < data.length; i++) {
+			data[i] = new XYSeries(DataPacket.LABELS[i]);
+			data[i].setNotify(false);
+		}
+		
+		for (int i = 0; i < points.size(); i++) {
+			ReachabilityPoint point = points.get(i);
+			
+			int label = ((usePrediction)? point.assignedlabel : point.label);
+			//int labelCategory = DataPacket.getLabelCategory(label);			
+			
+			data[label].add(i,point.reachability);		
+						
+		}
+
+		for (int i = 0; i < data.length; i++) {
+			dataset.addSeries(data[i]);
+		}
+		
+	}
+	
 	
 	public static void plotGraph(String title, ArrayList<ReachabilityPoint> points, int mode){
 		OpticsPlot demo = new OpticsPlot(title);

@@ -213,12 +213,12 @@ public class IDS {
 		
 		IDS ids = new IDS();
 
-		double epsilon = 7000;//Double.MAX_VALUE; // 7000 originally
+		double epsilon = Double.MAX_VALUE; // 7000 originally
 		int minPts = 50;// 20;//6;
 		IDS.DataSize = 10000;
 		
 
-		int testitems[] = { 8778, 8779, 8780, 8781, 8782};
+		int testitems[] = { 8778};// 8779, 8780, 8781, 8782};
 		int trainitems[] = { 5494  };
 
 		ids.initializeKnowledge(trainitems);

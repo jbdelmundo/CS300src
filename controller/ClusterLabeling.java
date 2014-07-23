@@ -93,7 +93,8 @@ public class ClusterLabeling {
 					
 				}
 				
-			}
+			}			
+						
 		}//all clusters done -- not all training data and test data is included in a cluster
 		//DO NOT USE assignedLabel on Train data since some are not yet changed -- use haslabel and getDataPacketLabel()
 		
@@ -145,12 +146,12 @@ public class ClusterLabeling {
 			}
 			rp.isAssignedGuess = true;
 			
-			System.out.println("Guessing " + i + "\t" + rp.assignedlabel);
-			if(rp.assignedlabel == UNDEFINED){
-				System.out.println("Still Guessing " + i + "\t" + rp.assignedlabel);
-				System.out.println("\tPredecessor" + i + "\t" + rp_predecessor_neighbor.assignedlabel + " "+rp_predecessor_neighbor.hasLabel  );
-				System.out.println("\tSuccessor" + i + "\t" + rp_successor_neighbor.assignedlabel);
-			}
+//			System.out.println("Guessing " + i + "\t" + rp.assignedlabel);
+//			if(rp.assignedlabel == UNDEFINED){
+//				System.out.println("Still Guessing " + i + "\t" + rp.assignedlabel);
+//				System.out.println("\tPredecessor" + i + "\t" + rp_predecessor_neighbor.assignedlabel + " "+rp_predecessor_neighbor.hasLabel  );
+//				System.out.println("\tSuccessor" + i + "\t" + rp_successor_neighbor.assignedlabel);
+//			}
 			guesses++;
 			
 			

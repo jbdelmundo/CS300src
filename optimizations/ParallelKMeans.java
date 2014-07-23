@@ -465,7 +465,7 @@ public class ParallelKMeans {
 			nearestNeighbors.add((DataPacket) dp[i]);
 		}
 		
-		
+//		System.err.println("RETURNING " + nearestNeighbors.size());
 		return nearestNeighbors;
 	}
 	
